@@ -6,14 +6,6 @@ from tkinter import *
 import tkinter as tk
 from PIL import Image, ImageTk
 
-# PDF Export Library Import
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib import colors
-
-
 class GUI:
     def __init__(self):
         self.root = Tk()
@@ -124,7 +116,7 @@ class GUI:
     # Open DSCODE file
     def open_file(self):
         # Open a specific type of file, for example, a .txt file
-        file_path = askopenfilename(filetypes=[("DSCODE Files", "*.dc")])
+        file_path = askopenfilename(filetypes=[("DSCODE Files", "*.dsc")])
         
         if file_path:
         # Read the file and use it as input in the text widget
@@ -135,7 +127,7 @@ class GUI:
         
     # Save DSCODE file
     def save_file(self):
-        file = asksaveasfile(mode = 'w', defaultextension = '.dc')
+        file = asksaveasfile(mode = 'w', defaultextension = '.dsc')
 
         if file is None:
             return
@@ -157,29 +149,12 @@ class GUI:
 
         self.display.config(state = "disabled")
 
+    # Export Analysis
+    def export_file(self):
         token_values = ["TOKENS"] + self.tokens
         lexemes_values = ["LEXEMES"] + self.lexemes
         self.combined_result = [[token_values, lexemes_values] for token_values, lexemes_values in zip(token_values, lexemes_values)]
         print(self.combined_result)
-
-
-    # Export Analysis
-    def export_file(self):
-        # Create a PDF file
-        if self.tokens:
-            pdf_fileLocation = asksaveasfile(mode='w', defaultextension='.pdf')
-            pdf_file = SimpleDocTemplate("result.pdf", pagesize=letter)
-            
-            result_table = Table(self.combined_result)
-            col_widths = [100, 100, 100]
-            result_table._colWidths(col_widths)
-
-            style = TableStyle([
-                ("GRID", (0, 0), (-1, -1), 1, "black"),
-                ("BACKGROUND", (0, 0), (-1, 0), "lightblue"),
-                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-            ])
-            result_table.setStyle(style)
 
 # Show the Application Window
 app = GUI()
