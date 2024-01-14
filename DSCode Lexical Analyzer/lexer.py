@@ -4,9 +4,10 @@ def lexical_analyzer(code):
     lexemes = []
     tokens = []
     current_token = ''
-    in_string_value = 0
+    string_delimiter_count = 0
     in_string = False
     double_operator = False
+    triple_operator = False
 
     operatorSymbols = [symbol for symbol, _ in TT_Operators]
     specialSymbols = [symbol for symbol, _ in TT_SpecialSymbols]
@@ -15,38 +16,57 @@ def lexical_analyzer(code):
     for i in range(len(code)):
         char = code[i]
 
-        if (char == '"') or (char == "'"):
+        # Check if the character is blank
+        if (char == ' ') or (char == '\n') or (char == '\t'):
+            continue
+        
+        # Check if the character is a string delimiter
+        elif (char == '"') or (char == "'"):
             # Toggle string mode 
             in_string = not in_string
-            in_string_value += 1
+            string_delimiter_count += 1
             current_token += char
 
-            if in_string_value == 2:
+            if string_delimiter_count == 1:
+                tokens.append("ERROR: Incomplete String Closing Delimiter(" + char + ")")
+                string_char = char
+                lexemes.append(string_char + '...')
+
+            elif string_delimiter_count == 2:
                 lexeme_display = current_token[1 : -1]
                 lexemes[-1] = string_char + lexeme_display[:2] + '...' + char
-                in_string_value = 0
+                string_delimiter_count = 0
                 current_token = ''
 
                 if string_char == char:
                     tokens[-1] = "String"
                 else:
                     tokens[-1] = "ERROR: Different String Delimiters Employed"
-                    
-            elif in_string_value == 1:
-                tokens.append("ERROR: Incomplete String Closing Delimiter(" + char + ")")
-                lexeme_display = current_token[1 : -1]
-                string_char = char
-                lexemes.append(string_char + lexeme_display[:2] + '...')
         
         elif in_string:
             # Inside a string literal
             current_token += char
         
+
+        # ----Fix three operators, separate 
         elif char in operatorSymbols:
-            if (len(code) > i + 2) and (char + code[i + 1] + code[i + 2]) in operatorSymbols:
+            
+            # Check if character is part of a three symbol operator
+            if (len(code) > i + 2) and ((char + code[i + 1] + code[i + 2]) in operatorSymbols):
+                triple_operator = not triple_operator
                 # Build token
                 current_token += char
                 continue
+
+            elif triple_operator:
+                # Build token
+                current_token += char
+                
+                if len(current_token) == 3:
+                    print(current_token)
+                    # index = operatorSymbols.index(current_token)
+                    lexemes.append(current_token)
+                    triple_operator = not triple_operator
 
             elif (char + code[i + 1]) in operatorSymbols and (double_operator is False):
                 # Build token
