@@ -70,7 +70,10 @@ class GUI:
         token_label.place(relx = 0.27, y = 10)
 
         # Open DSCODE file button
-        self.add_open_img = ImageTk.PhotoImage(Image.open(r'C:\Users\tashi\Tashiana\3rd Year 1st Semester\Principles of Programming Languages\Lexical Analyzer Code\Images\open.png').resize((50, 50), Image.ANTIALIAS))
+        original_image = Image.open(r'Images\open.png')
+        resized_image = original_image.resize((50, 50))
+        self.add_open_img = ImageTk.PhotoImage(resized_image)
+
         self.open_btn = Button (
             master = self.left_frame, 
             image = self.add_open_img, 
@@ -81,7 +84,10 @@ class GUI:
         self.open_btn.place(relx = 0.07, rely = 1.26, anchor = 's', y = -150)
 
         # Save DSCODE file button
-        self.add_save_img = ImageTk.PhotoImage(Image.open(r'C:\Users\tashi\Tashiana\3rd Year 1st Semester\Principles of Programming Languages\Lexical Analyzer Code\Images\save.png').resize((50, 50), Image.ANTIALIAS))
+        original_save_image = Image.open(r'Images\save.png')
+        resized_save_image = original_save_image.resize((50, 50))
+        self.add_save_img = ImageTk.PhotoImage(resized_save_image)
+
         self.save_btn = Button (
             master = self.left_frame, 
             image = self.add_save_img, 
@@ -92,7 +98,9 @@ class GUI:
         self.save_btn.place(relx = 0.19, rely = 1.26, anchor = 's', y = -150)
 
         # Run Lexical Analyzer button
-        self.add_run_img = ImageTk.PhotoImage(Image.open(r'C:\Users\tashi\Tashiana\3rd Year 1st Semester\Principles of Programming Languages\Lexical Analyzer Code\Images\run.png').resize((65, 65), Image.ANTIALIAS))
+        original_run_image = Image.open(r'Images\run.png')
+        resized_run_image = original_run_image.resize((65, 65))
+        self.add_run_img = ImageTk.PhotoImage(resized_run_image)
         self.run_btn = Button (
             master = self.left_frame, 
             image = self.add_run_img, 
@@ -103,7 +111,10 @@ class GUI:
         self.run_btn.place(relx = 0.91, rely = 1.26, anchor = 's', y = -150)
         
         # Export Analysis button
-        self.add_export_img = ImageTk.PhotoImage(Image.open(r'C:\Users\tashi\Tashiana\3rd Year 1st Semester\Principles of Programming Languages\Lexical Analyzer Code\Images\export.png').resize((180, 35), Image.ANTIALIAS))
+        original_export_image = Image.open(r'Images\export.png')
+        resized_export_image = original_export_image.resize((180, 35))
+        self.add_export_img = ImageTk.PhotoImage(resized_export_image)
+
         self.export_btn = Button (
             master = self.right_frame, 
             image = self.add_export_img, 
