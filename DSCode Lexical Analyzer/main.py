@@ -1,7 +1,7 @@
 from lexer import lexical_analyzer
 
 # GUI Library Import
-from tkinter.filedialog import askopenfilename, asksaveasfile
+from tkinter.filedialog import askopenfilename, asksaveasfile, asksaveasfilename
 from tkinter import *
 import tkinter as tk
 from PIL import Image, ImageTk
@@ -116,7 +116,7 @@ class GUI:
     # Open DSCODE file
     def open_file(self):
         # Open a specific type of file, for example, a .txt file
-        file_path = askopenfilename(filetypes=[("DSCODE Files", "*.dsc")])
+        file_path = askopenfilename(filetypes=[("DSCode Files", "*.dsc")])
         
         if file_path:
         # Read the file and use it as input in the text widget
@@ -127,7 +127,7 @@ class GUI:
         
     # Save DSCODE file
     def save_file(self):
-        file = asksaveasfile(mode = 'w', defaultextension = '.dsc')
+        file = asksaveasfile(mode = 'w', defaultextension='*.dsc', filetypes=[("DSCode Files", "*.dsc")])
 
         if file is None:
             return
@@ -151,11 +151,22 @@ class GUI:
 
     # Export Analysis
     def export_file(self):
-        token_values = ["TOKENS"] + self.tokens
-        lexemes_values = ["LEXEMES"] + self.lexemes
-        self.combined_result = [[token_values, lexemes_values] for token_values, lexemes_values in zip(token_values, lexemes_values)]
-        print(self.combined_result)
+        # Create a text file and save it
+        file_path2 = asksaveasfilename(defaultextension='.txt', filetypes=[('Text Files', '*.txt')])
+        if not file_path2:
+            return
 
+        # Text file contents
+        with open (file_path2, mode = 'w') as export:
+            export.write("\nDSCode Lexical Analyzer: Export Analysis\n\n")
+            export.write("==============  ==============================================\n")
+            export.write("LEXEMES\t\tTOKENS\n")
+            export.write("==============  ==============================================\n")
+            for item1, item2 in zip(self.lexemes, self.tokens):
+                export.write(f"{item1}\t\t{item2}\n")
+
+            export.close()
+            
 # Show the Application Window
 app = GUI()
 app.root.mainloop()
