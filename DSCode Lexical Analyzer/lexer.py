@@ -2,6 +2,7 @@ from tokentypes import TT_SpecialSymbols, TT_Operators
     
 def lexical_analyzer(code):
     lexemes = []
+    lexemes_display = []
     tokens = []
     current_token = ''
     string_delimiter_count = 0
@@ -17,7 +18,7 @@ def lexical_analyzer(code):
         char = code[i]
 
         # Check if the character is blank
-        if (char == ' ') or (char == '\n') or (char == '\t'):
+        if ((char == ' ') or (char == '\n') or (char == '\t')) and in_string is False:
             continue
         
         # Check if the character is a string delimiter
@@ -30,11 +31,13 @@ def lexical_analyzer(code):
             if string_delimiter_count == 1:
                 tokens.append("ERROR: Incomplete String Closing Delimiter(" + char + ")")
                 string_char = char
-                lexemes.append(string_char + '...')
+                lexemes.append("ERROR: Invalid Token")
+                lexemes_display.append(string_char + '...')
 
             elif string_delimiter_count == 2:
-                lexeme_display = current_token[1 : -1]
-                lexemes[-1] = string_char + lexeme_display[:2] + '...' + char
+                lexemes[-1] = current_token
+                string_display = current_token[1 : -1]
+                lexemes_display[-1] = string_char + string_display[:2] + '...' + char
                 string_delimiter_count = 0
                 current_token = ''
 
@@ -66,6 +69,7 @@ def lexical_analyzer(code):
                     print(current_token)
                     # index = operatorSymbols.index(current_token)
                     lexemes.append(current_token)
+                    lexemes_display.append(current_token)
                     triple_operator = not triple_operator
 
             elif (char + code[i + 1]) in operatorSymbols and (double_operator is False):
@@ -78,12 +82,14 @@ def lexical_analyzer(code):
                 # Get the index of char in the double operators list
                 index = operatorSymbols.index(current_token + char)
                 lexemes.append(current_token + char)
+                lexemes_display.append(current_token + char)
                 double_operator = not double_operator
 
             else:
                 # Get the index of char in the single operators list
                 index = operatorSymbols.index(char)
                 lexemes.append(char)
+                lexemes_display.append(char)
 
             # Use the index to access the corresponding token description
             token_description = TT_Operators[index][1]
@@ -101,12 +107,14 @@ def lexical_analyzer(code):
                 # Get the index of char in the special symbols list
                 index = specialSymbols.index(current_token + char)
                 lexemes.append(current_token + char)
+                lexemes_display.append(current_token + char)
                 double_operator = not double_operator
 
             else:
                 # Get the index of char in the single operators list
                 index = specialSymbols.index(char)
                 lexemes.append(char)
+                lexemes_display.append(char)
 
             # Use the index to access the corresponding token description
             token_description = TT_SpecialSymbols[index][1]
@@ -115,7 +123,10 @@ def lexical_analyzer(code):
 
         else:
             lexemes.append(char)
+            lexemes_display.append(char)
             tokens.append("ERROR: Invalid Token")
             current_token = ''
+
+    print(lexemes)
     
-    return lexemes, tokens
+    return lexemes_display, tokens
