@@ -1,10 +1,11 @@
-from tokentypes import TT_SpecialSymbols, TT_Operators
+from tokentypes import TT_SpecialSymbols, TT_Operators, TT_ControlFlowKeywords, TT_DataTypeKeywords, TT_StorageClassKeywords, TT_OtherKeywords
     
 def lexical_analyzer(code):
     lexemes = []
     lexemes_display = []
     tokens = []
     current_token = ''
+    invalid_token = ''
     string_delimiter_count = 0
     in_string = False
     double_operator = False
@@ -12,6 +13,10 @@ def lexical_analyzer(code):
 
     operatorSymbols = [symbol for symbol, _ in TT_Operators]
     specialSymbols = [symbol for symbol, _ in TT_SpecialSymbols]
+    controlflow = list(TT_ControlFlowKeywords)
+    datatype = list(TT_DataTypeKeywords)
+    storageclass = list(TT_StorageClassKeywords)
+    otherkeywords = list(TT_OtherKeywords)
     
     # Iterate through each character in the code
     for i in range(len(code)):
@@ -19,6 +24,13 @@ def lexical_analyzer(code):
 
         # Check if the character is blank
         if ((char == ' ') or (char == '\n') or (char == '\t')) and in_string is False:
+            continue
+
+        # Check for invalid tokens
+         # This part of the lexical for digit when identifying an identifier with number as the start
+         # This is to skip the remaining char for an identifier with number as the start
+        elif char in invalid_token:
+            invalid_token = invalid_token[1:]
             continue
         
         # Check if the character is a string delimiter
@@ -121,12 +133,77 @@ def lexical_analyzer(code):
             tokens.append(token_description)
             current_token = ''
 
+        #KEYWORDS AND IDENTIFIER
+            
+        # Checks if the char is alphabet, _, or a digit 
+        # accepts the digit only if the current token is not empty meaning there is a word before the number
+        # and when the current token is not all digits(need kasi na pag digits sa number sha)
+        elif char.isalpha() or char == '_' or (char.isdigit() and current_token != '' and not current_token.isdigit):
+            # The character is alphabetical, _, add it to the current token
+            current_token += char
+            if (i + 1 < len(code)) and (not code[i + 1].isalnum() and code[i + 1] != '_'):
+                # Check if the current token is a data type keyword
+                if current_token in datatype:
+                    lexemes.append(current_token)
+                    tokens.append("Data Type")
+                    current_token = ''
+
+                elif current_token in controlflow:
+                    lexemes.append(current_token)
+                    tokens.append("Control Flow")
+                    current_token = ''
+                    
+                elif current_token in storageclass:
+                    lexemes.append(current_token)
+                    tokens.append("Storage Class")
+                    current_token = ''
+
+                elif current_token in otherkeywords:
+                    lexemes.append(current_token)
+                    tokens.append("Other Keywords")
+                    current_token = ''
+
+                else:
+                    # The current token is not a data type keyword, treat as an identifier
+                    lexemes.append(current_token)
+                    tokens.append("Identifier")
+                    current_token = ''
+            else: continue
+        
+        #If char is a number
+        elif char.isdigit() or char == '.':
+            current_token += char
+            # This is to check whether the digit is followed by a alphabet or _ (since bawal nga sha sa rule ng identifier)
+            # if yes then papasok sha sa loop
+            if (i + 1 < len(code)) and (code[i + 1].isalpha() or code[i + 1]=='_'):
+                j = i
+                # this loop is to iterate until the final char in the identifier is read
+                # eg identifier: 2try
+                # babasahin nya hanggang y
+                while (code[j + 1].isalnum() or code[j + 1]=='_'):
+                    current_token += code[j + 1]
+                    j+=1
+                lexemes.append(current_token)
+                tokens.append("ERROR: Invalid Token")
+
+                # eto yung invalid token sa taas, pinasa sha para lagpasan na lang yung part pa nung identifier
+                invalid_token = current_token
+                current_token = current_token[1:]
+                current_token = ''
+
+            #pa add na lang ako here paano yung sa float
+            elif (i + 1 < len(code)) and (not code[i + 1].isdigit() and code[i + 1] != '.'):
+                lexemes.append(current_token)
+                tokens.append("Digit")
+                current_token = ''
+
+            else:
+                continue
+
         else:
             lexemes.append(char)
             lexemes_display.append(char)
             tokens.append("ERROR: Invalid Token")
             current_token = ''
-
-    print(lexemes)
     
     return lexemes_display, tokens
