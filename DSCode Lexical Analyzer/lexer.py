@@ -65,7 +65,7 @@ def lexical_analyzer(code):
 
         # ----Fix three operators, separate 
         elif char in operatorSymbols:
-            
+
             # Check if character is part of a three symbol operator
             if (len(code) > i + 2) and ((char + code[i + 1] + code[i + 2]) in operatorSymbols):
                 triple_operator = not triple_operator
@@ -109,7 +109,11 @@ def lexical_analyzer(code):
             current_token = ''
         
         elif char in specialSymbols:
-            if (char + code[i + 1]) in specialSymbols and (double_operator is False):
+            if char =='.' and current_token.isdigit():
+                current_token += char
+                continue
+
+            elif (char + code[i + 1]) in specialSymbols and (double_operator is False):
                 # Build token
                 current_token += char
                 double_operator = not double_operator
@@ -138,34 +142,39 @@ def lexical_analyzer(code):
         # Checks if the char is alphabet, _, or a digit 
         # accepts the digit only if the current token is not empty meaning there is a word before the number
         # and when the current token is not all digits(need kasi na pag digits sa number sha)
-        elif char.isalpha() or char == '_' or (char.isdigit() and current_token != '' and not current_token.isdigit):
+        elif char.isalpha() or char == '_' or (char.isdigit() and current_token != '' and not current_token.isdigit() and '.' not in current_token):
             # The character is alphabetical, _, add it to the current token
             current_token += char
             if (i + 1 < len(code)) and (not code[i + 1].isalnum() and code[i + 1] != '_'):
                 # Check if the current token is a data type keyword
                 if current_token in datatype:
                     lexemes.append(current_token)
+                    lexemes_display.append(current_token)
                     tokens.append("Data Type")
                     current_token = ''
 
                 elif current_token in controlflow:
                     lexemes.append(current_token)
+                    lexemes_display.append(current_token)
                     tokens.append("Control Flow")
                     current_token = ''
                     
                 elif current_token in storageclass:
                     lexemes.append(current_token)
+                    lexemes_display.append(current_token)
                     tokens.append("Storage Class")
                     current_token = ''
 
                 elif current_token in otherkeywords:
                     lexemes.append(current_token)
+                    lexemes_display.append(current_token)
                     tokens.append("Other Keywords")
                     current_token = ''
 
                 else:
                     # The current token is not a data type keyword, treat as an identifier
                     lexemes.append(current_token)
+                    lexemes_display.append(current_token)
                     tokens.append("Identifier")
                     current_token = ''
             else: continue
@@ -184,18 +193,27 @@ def lexical_analyzer(code):
                     current_token += code[j + 1]
                     j+=1
                 lexemes.append(current_token)
+                lexemes_display.append(current_token)
                 tokens.append("ERROR: Invalid Token")
 
                 # eto yung invalid token sa taas, pinasa sha para lagpasan na lang yung part pa nung identifier
                 invalid_token = current_token
-                current_token = current_token[1:]
+                invalid_token = invalid_token[1:]
+                current_token = ''
+            
+            elif (i + 1 < len(code)) and (not code[i + 1].isdigit() and '.' in current_token):
+                lexemes.append(current_token)
+                lexemes_display.append(current_token)
+                tokens.append("Float")
                 current_token = ''
 
             #pa add na lang ako here paano yung sa float
             elif (i + 1 < len(code)) and (not code[i + 1].isdigit() and code[i + 1] != '.'):
                 lexemes.append(current_token)
+                lexemes_display.append(current_token)
                 tokens.append("Digit")
                 current_token = ''
+            
 
             else:
                 continue
