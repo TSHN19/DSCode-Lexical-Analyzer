@@ -111,7 +111,5 @@ TT_Operators = [
     ('[]', "Brackets"),
     ('()', "Parenthesis"),
     ('{}', "Braces"),
-    ('/*', "Multiple Line Comment Opening"),
-    ('*/', "Multiple Line Comment Closing")
 ]
 
