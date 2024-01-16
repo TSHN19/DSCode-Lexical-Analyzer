@@ -24,7 +24,10 @@ TT_DataTypeKeywords = {
     "struct", 
     "union",
     "unsigned", 
-    "void"
+    "void",
+    "stack",
+    "llist",
+    "queue"
 }
 
 TT_StorageClassKeywords = {
@@ -41,46 +44,54 @@ TT_OtherKeywords = {
     "default", 
     "sizeof", 
     "volatile"
+    "pqueue",
+    "peek",
+    "input",
+    "output"
 }
 
 # OPERATORS
 TT_Operators = [
-    ('+', "Plus"),
-    ('-', "Minus"),
-    ('*', "Multiply/Asterisk"),
-    ('/', "Divided By"),
-    ('%', "Modulo/Remainder"),
-    ('>', "Greater Than"),
-    ('<', "Less Than"),
-    ('!', "Logical NOT"),
-    ('=', "Assignment"),
-    ('&', "Bitwise AND"),
-    ('|', "Bitwise OR"),
-    ('^', "Bitwise XOR"),
-    ('~', "Bitwise NOT/Tilde"),
-    ('+=', "Addition Assignment"),
-    ('++', "Increment"),
-    ('-=', "Subtraction Assignment"),
-    ('--', "Decrement"),
-    ('*=', "Multiplication Assignment"),
-    ('/=', "Division Assignment"),
-    ('%=', "Modulo Assignment"),
-    ('>=', "Greater Than or Equal To"),
-    ('>>', "Right Shift"),
-    ('>>=', "Right Shift Assignment"),
-    ('<=', "Less Than or Equal To"),
-    ('<<', "Left Shift"),
-    ('<<=', "Left Shift Assignment"),
-    ('!=', "Not equal To"),
-    ('==', "Equal To",),
-    ('&&', "Logical AND"),
-    ('&=', "Bitwise AND Assignment"),
-    ('||', "Logical OR"),
-    ('|=', "Bitwise OR Assignment"),
-    ('^=', "Bitwise XOR Assignment")
-]
-
-TT_SpecialSymbols = [
+    ('+', "Plus Operator"),
+    ('-', "Minus Operator"),
+    ('*', "Multiply/Asterisk Operator"),
+    ('/', "Divided By Operator"),
+    ('%', "Modulo/Remainder Operator"),
+    ('>', "Greater Than Operator"),
+    ('<', "Less Than Operator"),
+    ('!', "Logical NOT Operator"),
+    ('=', "Assignment Operator"),
+    ('&', "Bitwise AND Operator"),
+    ('|', "Bitwise OR Operator"),
+    ('^', "Bitwise XOR Operator"),
+    ('~', "Bitwise NOT/Tilde Operator"),
+    ('+=', "Addition Assignment Operator"),
+    ('++', "Increment Operator"),
+    ('-=', "Subtraction Assignment Operator"),
+    ('--', "Decrement Operator"),
+    ('*=', "Multiplication Assignment Operator"),
+    ('/=', "Division Assignment Operator"),
+    ('%=', "Modulo Assignment Operator"),
+    ('>=', "Greater Than or Equal To Operator"),
+    ('>>', "Right Shift Operator"),
+    ('>>=', "Right Shift Assignment Operator"),
+    ('<=', "Less Than or Equal To Operator"),
+    ('<<', "Left Shift Operator"),
+    ('<<=', "Left Shift Assignment Operator"),
+    ('!=', "Not equal To Operator"),
+    ('==', "Equal To Operator"),
+    ('&&', "Logical AND Operator"),
+    ('&=', "Bitwise AND Assignment Operator"),
+    ('||', "Logical OR Operator"),
+    ('|=', "Bitwise OR Assignment Operator"),
+    ('^=', "Bitwise XOR Assignment Operator"),
+    ('<+', "Enqueue Operator"),
+    ('>-', "Dequeue Operator"),
+    ('>->', "Recursive Dequeue Operator"),
+    ('<+<', "Priority Enqueue Operator"),
+    ('>|<', "Intersect Operator"),
+    ('#&#', "Unite Operator"),
+    ('??', "Search Operator"),
     ('[', "Left Bracket"),
     (']', "Right Bracket"),
     ('(', "Left Parenthesis"),
@@ -96,3 +107,4 @@ TT_SpecialSymbols = [
     ('()', "Parenthesis"),
     ('{}', "Braces")
 ]
+
