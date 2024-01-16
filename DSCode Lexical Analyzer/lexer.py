@@ -189,15 +189,15 @@ def lexical_analyzer(code):
             
             elif (i + 1 < len(code)) and (not code[i + 1].isdigit() and '.' in current_token):
                 lexemes.append(current_token)
-                lexemes_display.append(current_token)
-                tokens_display.append("Float")
+                lexemes_display[-1] = current_token
+                tokens_display[-1] = "Float Constant"
                 current_token = ''
 
             #pa add na lang ako here paano yung sa float
             elif (i + 1 < len(code)) and (not code[i + 1].isdigit() and code[i + 1] != '.'):
                 lexemes.append(current_token)
                 lexemes_display.append(current_token)
-                tokens_display.append("Digit")
+                tokens_display.append("Integer Constant")
                 current_token = ''
 
         else:
