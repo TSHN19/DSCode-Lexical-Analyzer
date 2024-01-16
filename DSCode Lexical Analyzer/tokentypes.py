@@ -47,7 +47,7 @@ TT_OtherKeywords = {
     "pqueue",
     "peek",
     "input",
-    "output"
+    "print"
 }
 
 # OPERATORS
@@ -105,6 +105,9 @@ TT_Operators = [
     ('.', "Period"),
     ('[]', "Brackets"),
     ('()', "Parenthesis"),
-    ('{}', "Braces")
+    ('{}', "Braces"),
+    ('//', "Comment"),
+    ('/*', "Multiple Line Comment Opening"),
+    ('*/', "Multiple Line Comment Closing")
 ]
 
