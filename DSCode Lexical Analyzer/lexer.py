@@ -8,7 +8,8 @@ def lexical_analyzer(code):
     current_token = ''
     invalid_token = ''
     string_delimiter_count = 0
-    in_comment = False
+    in_singlecomment = False
+    in_multiplecomment = False
     in_string = False
     double_operator = False
     triple_operator = False
@@ -27,19 +28,32 @@ def lexical_analyzer(code):
         # Check if the character is blank
         if char == "/" and code[i + 1] == "/":
             current_token += char
-            in_comment = not in_comment
+            in_singlecomment = not in_singlecomment
 
-        elif in_comment and char == "\n":
-            in_comment = not in_comment
+        elif in_singlecomment and char == "\n":
+            current_token += char
+            in_singlecomment = not in_singlecomment
             lexemes.append(current_token)
             lexemes_display.append(current_token)
             tokens_display.append("Single-Line Comment")
             current_token = ''
+
+        elif char == "/" and code[i + 1] == "*":
+            current_token += char
+            in_multiplecomment = not in_multiplecomment
+
+        elif in_multiplecomment and code[i - 1] == "*" and char == "/":
+            current_token += char
+            in_multiplecomment = not in_multiplecomment
+            lexemes.append(current_token)
+            lexemes_display.append(current_token)
+            tokens_display.append("Multiple-Line Comment")
+            current_token = ''
         
-        elif in_comment:
+        elif in_singlecomment or in_multiplecomment:
             current_token += char
 
-        elif ((char == ' ') or (char == '\n') or (char == '\t')) and (in_string is False) and (in_comment is False):
+        elif ((char == ' ') or (char == '\n') or (char == '\t')) and not(in_string or in_singlecomment or in_multiplecomment):
             continue
 
         # Check if the character is a string delimiter
