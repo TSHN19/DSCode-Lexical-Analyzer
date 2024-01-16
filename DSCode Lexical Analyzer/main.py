@@ -163,20 +163,28 @@ class GUI:
     # Export Analysis
     def export_file(self):
         # Create a text file and save it
-        file_path2 = asksaveasfilename(defaultextension='.txt', filetypes=[('Text Files', '*.txt')])
+        file_path2 = asksaveasfilename(defaultextension='.txt', filetypes=[('Text Files', '.txt')])
         if not file_path2:
             return
 
-        # Text file contents
-        with open (file_path2, mode = 'w') as export:
-            export.write("\nDSCode Lexical Analyzer: Export Analysis\n\n")
-            export.write("==============  ==============================================\n")
-            export.write("LEXEMES\t\tTOKENS\n")
-            export.write("==============  ==============================================\n")
-            for item1, item2 in zip(self.lexemes, self.tokens):
-                export.write(f"{item1}\t\t{item2}\n")
+        # Set the width for each column
+        token_width = 30
 
-            export.close()
+        # Find the maximum length of lexemes
+        max_lexeme_length = max(len(lexeme) for lexeme in self.lexemes)
+        lexeme_width = max(max_lexeme_length, 30)  # Set a minimum width of 30 for lexemes
+
+        # Text file contents
+        with open(file_path2, mode='w') as export:
+            export.write("\nSymbol Table\n\n")
+            export.write(f"={'=' * lexeme_width}{'=' * (15 - lexeme_width)}==============================================\n")
+            export.write(f"LEXEMES{' ' * (lexeme_width - 7)}TOKENS{' ' * (token_width - 6)}\n")
+            export.write(f"={'=' * lexeme_width}{'=' * (15 - lexeme_width)}==============================================\n")
+            for item1, item2 in zip(self.lexemes, self.tokens):
+                # Left-justify the text in each column with the specified width
+                export.write(f"{item1.ljust(lexeme_width)}{item2.ljust(token_width)}\n")
+
+        export.close()
             
 # Show the Application Window
 app = GUI()
