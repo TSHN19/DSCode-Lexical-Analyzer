@@ -25,11 +25,13 @@ def lexical_analyzer(code):
     for i in range(len(code)):
         char = code[i]
 
-        # Check if the character is blank
+        # COMMENTS
+        # Check if the current and succeeding character has a single-line comment symbol
         if char == "/" and code[i + 1] == "/":
             current_token += char
             in_singlecomment = not in_singlecomment
 
+        # If single-line comment is True, all inputs will count as a comment unless a newline is encountered
         elif in_singlecomment and char == "\n":
             in_singlecomment = not in_singlecomment
             lexemes.append(current_token)
@@ -37,10 +39,12 @@ def lexical_analyzer(code):
             tokens_display.append("Single-Line Comment")
             current_token = ''
 
+        # Check if the current and succeeding character has a multiple comment symbol
         elif char == "/" and code[i + 1] == "*":
             current_token += char
             in_multiplecomment = not in_multiplecomment
 
+        # If multiple-line comment is True, check if the current and succeeding character has the closing multiple-comment symbol
         elif in_multiplecomment and code[i - 1] == "*" and char == "/":
             current_token += char
             in_multiplecomment = not in_multiplecomment
@@ -49,12 +53,16 @@ def lexical_analyzer(code):
             tokens_display.append("Multiple-Line Comment")
             current_token = ''
         
+        # If single-line or multiple-line comment is True, build the comment through the inputs
         elif in_singlecomment or in_multiplecomment:
             current_token += char
 
+        # BLANKS
+        # Check if the character is a blank, and not inside a string or comments
         elif ((char == ' ') or (char == '\n') or (char == '\t')) and not(in_string or in_singlecomment or in_multiplecomment):
             continue
-
+        
+        # STRING AND CHARACTER CONSTANT
         # Check if the character is a string delimiter
         elif (char == '"') or (char == "'"):
             # Toggle string mode 
@@ -97,24 +105,25 @@ def lexical_analyzer(code):
                 
                 current_token = ''
         
-        # While in_string is true, all following inputs will count as String Literal
+        # While in_string is true, all following inputs will count as part of the String Constant
         elif in_string:
-            # Inside a string literal
             current_token += char
 
+            # Format for string display in GUI
             if len(current_token) < 14:
                 lexemes_display[-1] = current_token[:10] + "...?"
 
-        
+        # OPERATORS AND SPECIAL SYMBOLS
         # Check if input is a operator or special symbol
         elif (char in symbols):
             
+            # Check if the current character is part of a triple operator
             if (len(code) > i + 2) and (char + code[i + 1] + code[i + 2]) in (symbols) and (triple_operator is False):
-                # Build token
                 current_token += char
                 triple_operator = not triple_operator
                 continue
-
+            
+            # Iterate through the next two characters of the triple operator
             elif triple_operator:
                 if (len(current_token) < 2):
                     current_token += char
@@ -125,14 +134,14 @@ def lexical_analyzer(code):
                 lexemes_display.append(current_token)
                 triple_operator = not triple_operator
             
+            # Check if the current character is part of a double operator
             elif (char + code[i + 1]) in symbols and (double_operator is False) and (triple_operator is False):
-                # Build token
                 current_token += char
                 double_operator = not double_operator
                 continue
             
+            # Iterate through the next two characters of the double operator
             elif double_operator:
-                # Get the index of char in the double operators list
                 current_token += char
                 lexemes.append(current_token)
                 lexemes_display.append(current_token)
@@ -155,23 +164,21 @@ def lexical_analyzer(code):
             except ValueError:
                 tokens_display.append("ERROR: Invalid Token")
 
-        # Check for invalid tokens
-        # This part of the lexical for digit when identifying an identifier with number as the start
-        # This is to skip the remaining char for an identifier with number as the start
+        
+        
+        #KEYWORDS AND IDENTIFIER
+        # Check for invalid tokens to skip the remaining character for an identifier starting with a digit
         elif char in invalid_token:
             invalid_token = invalid_token[1:]
             continue
-
-        #KEYWORDS AND IDENTIFIER
-
-        # Checks if the char is alphabet, _, or a digit 
-        # accepts the digit only if the current token is not empty meaning there is a word before the number
-        # and when the current token is not all digits(need kasi na pag digits sa number sha)
+        
+        # Checks if the character is an alphabet, _, or a digit 
+        # Accepts the digit only if the current token is not empty meaning there is a word before the number
         elif char.isalpha() or char == '_' or (char.isdigit() and current_token != '' and not current_token.isdigit() and '.' not in current_token):
-            # The character is alphabetical, _, add it to the current token
             current_token += char
             if (i + 1 < len(code)) and (not code[i + 1].isalnum() and code[i + 1] != '_'):
-                # Check if the current token is a data type keywordnot(code[i + 1].isalpha()):
+                
+                # Check if the current token is a keyword
                 lexemes.append(current_token)
                 lexemes_display.append(current_token)
 
@@ -194,16 +201,16 @@ def lexical_analyzer(code):
 
             else: continue
         
-        # Check if input is a numeric constant
+        # NUMERICAL CONSTANTS
+        # Check if input is a digit
         elif char in digits or char == '.':
             current_token += char
-            # This is to check whether the digit is followed by a alphabet or _ (since bawal nga sha sa rule ng identifier)
-            # if yes then papasok sha sa loop
+            
+            # Check if the digit is followed by an alphabet or _ (Invalid Identifier)
             if (i + 1 < len(code)) and (code[i + 1].isalpha() or code[i + 1]=='_'):
                 j = i
-                # this loop is to iterate until the final char in the identifier is read
-                # eg identifier: 2try
-                # babasahin nya hanggang y
+                
+                # Iterate all the characters of the the invalid identifiers
                 while (code[j + 1].isalnum() or code[j + 1]=='_'):
                     current_token += code[j + 1]
                     j+=1
@@ -211,24 +218,27 @@ def lexical_analyzer(code):
                 lexemes_display.append(current_token)
                 tokens_display.append("ERROR: Invalid Token")
 
-                # eto yung invalid token sa taas, pinasa sha para lagpasan na lang yung part pa nung identifier
+                # Used for handling the invalid identifier
                 invalid_token = current_token
                 invalid_token = invalid_token[1:]
                 current_token = ''
             
+            # Check if input is a floating-point constant
             elif (i + 1 < len(code)) and (not code[i + 1] in digits and '.' in current_token):
                 lexemes[-1] = current_token
                 lexemes_display[-1] = current_token
                 tokens_display[-1] = ("Float-Point Constant")
                 current_token = ''
 
-            #pa add na lang ako here paano yung sa float
+            # Check if input is a integer constant
             elif (i + 1 < len(code)) and (not code[i + 1] in digits and code[i + 1] != '.'):
                 lexemes.append(current_token)
                 lexemes_display.append(current_token)
                 tokens_display.append("Integer Constant")
                 current_token = ''
 
+        # INVALID TOKENS
+        # If the input did not fit on any of the if condition, consider as an Invalid Token
         else:
             lexemes.append(char)
             lexemes_display.append(char)
