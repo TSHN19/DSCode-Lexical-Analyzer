@@ -1,4 +1,5 @@
 from tokentypes import TT_Operators, TT_ControlFlowKeywords, TT_DataTypeKeywords, TT_StorageClassKeywords, TT_OtherKeywords
+from tokentypes import alphabet, digits
     
 def lexical_analyzer(code):
     lexemes = []
@@ -7,6 +8,7 @@ def lexical_analyzer(code):
     current_token = ''
     invalid_token = ''
     string_delimiter_count = 0
+    in_comment = False
     in_string = False
     double_operator = False
     triple_operator = False
@@ -23,7 +25,21 @@ def lexical_analyzer(code):
         char = code[i]
 
         # Check if the character is blank
-        if ((char == ' ') or (char == '\n') or (char == '\t')) and in_string is False:
+        if char == "/" and code[i + 1] == "/":
+            current_token += char
+            in_comment = not in_comment
+
+        elif in_comment and char == "\n":
+            in_comment = not in_comment
+            lexemes.append(current_token)
+            lexemes_display.append(current_token)
+            tokens_display.append("Single-Line Comment")
+            current_token = ''
+        
+        elif in_comment:
+            current_token += char
+
+        elif ((char == ' ') or (char == '\n') or (char == '\t')) and (in_string is False) and (in_comment is False):
             continue
 
         # Check if the character is a string delimiter
@@ -138,7 +154,7 @@ def lexical_analyzer(code):
         # Checks if the char is alphabet, _, or a digit 
         # accepts the digit only if the current token is not empty meaning there is a word before the number
         # and when the current token is not all digits(need kasi na pag digits sa number sha)
-        elif char.isalpha() or char == '_' or (char.isdigit() and current_token != '' and not current_token.isdigit() and '.' not in current_token):
+        elif char.isalpha() or char == '_' or (char in digits and current_token != '' and not current_token in digits and '.' not in current_token):
             # The character is alphabetical, _, add it to the current token
             current_token += char
             if (i + 1 < len(code)) and (not code[i + 1].isalnum() and code[i + 1] != '_'):
@@ -166,7 +182,7 @@ def lexical_analyzer(code):
             else: continue
         
         # Check if input is a numeric constant
-        elif char.isdigit() or char == '.':
+        elif char in digits or char == '.':
             current_token += char
             # This is to check whether the digit is followed by a alphabet or _ (since bawal nga sha sa rule ng identifier)
             # if yes then papasok sha sa loop
@@ -187,14 +203,14 @@ def lexical_analyzer(code):
                 invalid_token = invalid_token[1:]
                 current_token = ''
             
-            elif (i + 1 < len(code)) and (not code[i + 1].isdigit() and '.' in current_token):
+            elif (i + 1 < len(code)) and (not code[i + 1] in digits and '.' in current_token):
                 lexemes.append(current_token)
                 lexemes_display[-1] = current_token
                 tokens_display[-1] = "Float Constant"
                 current_token = ''
 
             #pa add na lang ako here paano yung sa float
-            elif (i + 1 < len(code)) and (not code[i + 1].isdigit() and code[i + 1] != '.'):
+            elif (i + 1 < len(code)) and (not code[i + 1] in digits and code[i + 1] != '.'):
                 lexemes.append(current_token)
                 lexemes_display.append(current_token)
                 tokens_display.append("Integer Constant")
