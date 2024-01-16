@@ -31,7 +31,6 @@ def lexical_analyzer(code):
             in_singlecomment = not in_singlecomment
 
         elif in_singlecomment and char == "\n":
-            current_token += char
             in_singlecomment = not in_singlecomment
             lexemes.append(current_token)
             lexemes_display.append(current_token)
@@ -79,14 +78,14 @@ def lexical_analyzer(code):
                 if (string_char == char) and (string_char == '"'):
                     string_display = current_token[1 : -1]
                     lexemes_display[-1] = string_char + string_display[:9] + '...' + char
-                    tokens_display[-1] = "String Literal"
+                    tokens_display[-1] = "String Constant"
 
                 # Check if string uses single quotes delimiter
                 elif (string_char == char) and (string_char == "'"):
                     # If the input is a single character
                     if len(current_token) == 3:
                         lexemes_display[-1] = current_token
-                        tokens_display[-1] = "Character Literal"
+                        tokens_display[-1] = "Character Constant"
                     
                     # Else, notify wrong delimiter used
                     else:
@@ -168,7 +167,7 @@ def lexical_analyzer(code):
         # Checks if the char is alphabet, _, or a digit 
         # accepts the digit only if the current token is not empty meaning there is a word before the number
         # and when the current token is not all digits(need kasi na pag digits sa number sha)
-        elif char.isalpha() or char == '_' or (char in digits and current_token != '' and not current_token in digits and '.' not in current_token):
+        elif char.isalpha() or char == '_' or (char.isdigit() and current_token != '' and not current_token.isdigit() and '.' not in current_token):
             # The character is alphabetical, _, add it to the current token
             current_token += char
             if (i + 1 < len(code)) and (not code[i + 1].isalnum() and code[i + 1] != '_'):
@@ -218,9 +217,9 @@ def lexical_analyzer(code):
                 current_token = ''
             
             elif (i + 1 < len(code)) and (not code[i + 1] in digits and '.' in current_token):
-                lexemes.append(current_token)
+                lexemes[-1] = current_token
                 lexemes_display[-1] = current_token
-                tokens_display[-1] = "Float Constant"
+                tokens_display[-1] = ("Float-Point Constant")
                 current_token = ''
 
             #pa add na lang ako here paano yung sa float
