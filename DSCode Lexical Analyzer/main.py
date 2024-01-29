@@ -14,7 +14,6 @@ class GUI:
         self.root.title("DSCODE Lexical Analyzer")
         self.root.resizable(False, False)
         
-
         # DSCODE Label
         label = Label(
             self.root, 
@@ -23,6 +22,15 @@ class GUI:
             bg = "#393E46", 
             font = ("Inter", 35, "bold"))
         label.place(x = 35, y = 18)
+
+        # .dsc Label
+        label = Label(
+            self.root, 
+            text = "(.dsc)", 
+            fg = "white", 
+            bg = "#393E46", 
+            font = ("Inter", 25, "bold"))
+        label.place(x = 250, y = 28)
 
         # Left Frame: Code Input
         self.left_frame = Frame(
@@ -150,12 +158,12 @@ class GUI:
     # Run Lexical Analyzer
     def run_file(self):
         code = self.code_input.get(1.0, END)
-        self.lexemes, self.tokens = lexical_analyzer(code)
+        self.lexemes, self.lexemes_display, self.tokens = lexical_analyzer(code)
     
         self.display.config(state = "normal")
         self.display.delete(1.0, END)
 
-        for item1, item2 in zip(self.lexemes, self.tokens):
+        for item1, item2 in zip(self.lexemes_display, self.tokens):
             self.display.insert(END, f"{item1}\t\t{item2}\n")
 
         self.display.config(state = "disabled")
