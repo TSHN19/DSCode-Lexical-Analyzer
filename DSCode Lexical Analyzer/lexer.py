@@ -12,8 +12,8 @@ def lexical_analyzer(code):
     in_multiplecomment = False
     in_string = False
     period_count = 0
-    line_count = 0
-    
+    line_count = 1
+    line_count_list = []    
 
     symbols = [symbol for symbol, _ in TT_Operators]    
     controlflow = list(TT_ControlFlowKeywords)
@@ -42,6 +42,7 @@ def lexical_analyzer(code):
             lexemes.append(current_token)
             lexemes_display.append(current_token)
             tokens_display.append("COMMENT")
+            line_count_list.append(str(line_count))
             current_token = ''
 
         # Check if the current and succeeding character has a multiple comment symbol
@@ -56,6 +57,7 @@ def lexical_analyzer(code):
             lexemes.append(current_token)
             lexemes_display.append(current_token)
             tokens_display.append("COMMENTS")
+            line_count_list.append(str(line_count))
             current_token = ''
         
         # If single-line or multiple-line comment is True, build the comment through the inputs
@@ -81,6 +83,7 @@ def lexical_analyzer(code):
                 string_char = char
                 lexemes.append("ERROR: Invalid Token")
                 lexemes_display.append(string_char)
+                line_count_list.append(str(line_count))
 
             # If encounters a closing delimiter, close the string input
             elif string_delimiter_count == 2:
@@ -109,6 +112,7 @@ def lexical_analyzer(code):
                     tokens_display[-1] = "ERROR: Different String Delimiters Employed"
                 
                 current_token = ''
+                line_count_list[-1] = str(line_count)
         
         # While in_string is true, all following inputs will count as part of the String Constant
         elif in_string:
@@ -133,6 +137,7 @@ def lexical_analyzer(code):
                 # Check if the current token is a keyword
                 lexemes.append(current_token)
                 lexemes_display.append(current_token)
+                line_count_list.append(str(line_count))
 
                 if current_token in datatype:
                     for j in range(len(noise_words)):
@@ -141,6 +146,7 @@ def lexical_analyzer(code):
                             current_token = current_token.replace(noise_word, '')
                             lexemes[-1] = current_token
                             lexemes_display[-1] = current_token
+                            line_count_list[-1] = str(line_count)
                     tokens_display.append("DATATYPE_KW")
 
                 elif current_token in controlflow:
@@ -179,6 +185,7 @@ def lexical_analyzer(code):
                 lexemes.append(current_token)
                 lexemes_display.append(current_token)
                 tokens_display.append("ERROR: Invalid Identifier")
+                line_count_list.append(str(line_count))
 
                 # Used for handling the invalid identifier
                 invalid_token = current_token
@@ -195,6 +202,7 @@ def lexical_analyzer(code):
                     lexemes.append(current_token)
                     lexemes_display.append(current_token)
                     tokens_display.append("INT_CONST")
+                    line_count_list.append(str(line_count))
                     current_token = ''
                 
                 # Check if input is a floating-point constant
@@ -202,6 +210,7 @@ def lexical_analyzer(code):
                     lexemes.append(current_token)
                     lexemes_display.append(current_token)
                     tokens_display.append("FLOAT_CONST")
+                    line_count_list.append(str(line_count))
                     current_token = ''
                     period_count = 0
 
@@ -209,6 +218,7 @@ def lexical_analyzer(code):
                     lexemes.append(current_token)
                     lexemes_display.append(current_token)
                     tokens_display.append("ERROR: Invalid Token")
+                    line_count_list.append(str(line_count))
                     period_count = 0
                     current_token = ''
                 
@@ -230,6 +240,7 @@ def lexical_analyzer(code):
                     index = symbols.index(current_token)
                     token_description = TT_Operators[index][1]
                     tokens_display.append(token_description)
+                    line_count_list.append(str(line_count))
                     current_token = ''
 
                 except ValueError:
@@ -242,6 +253,7 @@ def lexical_analyzer(code):
             lexemes.append(char)
             lexemes_display.append(char)
             tokens_display.append("ERROR: Invalid Token")
+            line_count_list.append(str(line_count))
             current_token = ''
     
-    return lexemes, lexemes_display, tokens_display
+    return lexemes, lexemes_display, tokens_display, line_count_list
