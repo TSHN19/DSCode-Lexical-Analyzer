@@ -29,7 +29,6 @@ def lexical_analyzer(code):
         # LINES
         if code[i] == "\n":
             line_count += 1
-            print(line_count)
 
         # COMMENTS
         # Check if the current and succeeding character has a single-line comment symbol
