@@ -12,6 +12,7 @@ def lexical_analyzer(code):
     in_multiplecomment = False
     in_string = False
     period_count = 0
+    line_count = 0
     
 
     symbols = [symbol for symbol, _ in TT_Operators]    
@@ -24,6 +25,11 @@ def lexical_analyzer(code):
     # Iterate through each character in the code
     for i in range(len(code)):
         char = code[i]
+
+        # LINES
+        if code[i] == "\n":
+            line_count += 1
+            print(line_count)
 
         # COMMENTS
         # Check if the current and succeeding character has a single-line comment symbol
