@@ -163,23 +163,26 @@ class GUI:
         for i in range(len(code)):
             if code[i] == "\n":
                 self.line_count += 1
-                self.line_count_list.append(str(self.line_count))
                 self.number_line_left.insert(END, f"{self.line_count}\n")
+                self.line_count_list.append(str(self.line_count))
 
         self.number_line_left.config(state = "disabled")
     
     # When backspace key is pressed
     def handle_backspace(self, event):
+        # Get the text from code input
         code = self.code_input.get(1.0, END)
+        self.line_count_list = [1]
         self.line_count = 1
         self.number_line_left.config(state = "normal")
         self.number_line_left.delete(1.0, END)
         self.number_line_left.insert(END, f"1\n")
-
+        
         for i in range(len(code)):
-            if code[i - 1] == "\n":
+            if code[i] == "\n":
                 self.line_count += 1
                 self.number_line_left.insert(END, f"{self.line_count}\n")
+                self.line_count_list.append(str(self.line_count))
 
         self.number_line_left.config(state = "disabled")
 
@@ -247,11 +250,11 @@ class GUI:
         with open(file_path2, mode='w') as export:
             export.write("\nSymbol Table\n\n")
             export.write(f"={'=' * lexeme_width}{'=' * (15 - lexeme_width)}==============================================\n")
-            export.write(f"LEXEMES{' ' * (lexeme_width - 7)}TOKENS{' ' * (token_width - 6)}\n")
+            export.write(f"\tLEXEMES{' ' * (lexeme_width - 7)}TOKENS{' ' * (token_width - 6)}\n")
             export.write(f"={'=' * lexeme_width}{'=' * (15 - lexeme_width)}==============================================\n")
-            for item1, item2 in zip(self.lexemes, self.tokens):
+            for item1, item2, item3 in zip(self.number_line, self.lexemes, self.tokens):
                 # Left-justify the text in each column with the specified width
-                export.write(f"{item1.ljust(lexeme_width)}{item2.ljust(token_width)}\n")
+                export.write(f"{item1}\t{item2.ljust(lexeme_width)}{item3.ljust(token_width)}\n")
 
         export.close()
             
