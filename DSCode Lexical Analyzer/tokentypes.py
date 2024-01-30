@@ -116,11 +116,11 @@ TT_Operators = [
     ('{}', "BRACES")
 ]
 
-TT_Delim = [
+TT_Delimiters = [
     ('[', "LBRACKET"),
     (']', "RBRACKET"),
-    ('(', "LPARENTHESIS"),
-    (')', "RPARENTHESIS"),
+    ('(', "LPAREN"),
+    (')', "RPAREN"),
     ('{', "LBRACE"),
     ('}', "RBRACE")
 ]
