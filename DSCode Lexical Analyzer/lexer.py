@@ -5,6 +5,7 @@ def lexical_analyzer(code):
     lexemes = []
     lexemes_display = []
     tokens_display = []
+    line_count_list = []   
     current_token = ''
     invalid_token = ''
     string_delimiter_count = 0
@@ -13,8 +14,7 @@ def lexical_analyzer(code):
     in_string = False
     period_count = 0
     line_count = 1
-    line_count_list = []    
-
+     
     symbols = [symbol for symbol, _ in TT_Operators]    
     controlflow = list(TT_ControlFlowKeywords)
     datatype = list(TT_DataTypeKeywords)
@@ -137,7 +137,6 @@ def lexical_analyzer(code):
                 # Check if the current token is a keyword
                 lexemes.append(current_token)
                 lexemes_display.append(current_token)
-                line_count_list.append(str(line_count))
 
                 if current_token in datatype:
                     for j in range(len(noise_words)):
@@ -162,6 +161,7 @@ def lexical_analyzer(code):
                     tokens_display.append("IDENTIFIER")
                 
                 current_token = ''
+                line_count_list.append(str(line_count))
 
             else: continue
         
@@ -245,6 +245,7 @@ def lexical_analyzer(code):
 
                 except ValueError:
                     tokens_display.append("ERROR: Invalid Token")
+                    line_count_list.append(str(line_count))
                     current_token = ''
 
         # INVALID TOKENS
