@@ -106,12 +106,6 @@ TT_Operators = [
     ('>|<', "INTRSCT_OP"),
     ('#&#', "UNT_OP"),
     ('??', "SRCH_OP"),
-    ('[', "LBRACKET"),
-    (']', "RBRACKET"),
-    ('(', "LPARENTHESIS"),
-    (')', "RPARENTHESIS"),
-    ('{', "LBRACE"),
-    ('}', "RBRACE"),
     (',', "COMMA"),
     (':', "COLON"),
     (';', "SEMICOLON"),
@@ -120,5 +114,14 @@ TT_Operators = [
     ('[]', "BRACKETS"),
     ('()', "PARENTHESIS"),
     ('{}', "BRACES")
+]
+
+TT_Delim = [
+    ('[', "LBRACKET"),
+    (']', "RBRACKET"),
+    ('(', "LPARENTHESIS"),
+    (')', "RPARENTHESIS"),
+    ('{', "LBRACE"),
+    ('}', "RBRACE")
 ]
 
