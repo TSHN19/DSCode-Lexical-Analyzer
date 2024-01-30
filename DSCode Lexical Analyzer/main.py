@@ -54,9 +54,16 @@ class GUI:
         self.right_frame.place(x = 595, y = 90)
         self.right_frame.pack_propagate(False)
 
+        # Create a text widget for number line
+        self.number_line = Text(self.left_frame, bg = "#E2E2E2", borderwidth = 0, padx = 5, pady = 5)
+        self.number_line.place(relx = 0.01, rely = 0.01, relwidth = 0.10, height = 465)
+        self.number_line.config(wrap = tk.WORD, font = ("Courier", 12))
+        self.number_line.insert(END, f"1\n")
+        self.number_line.config(state = "disabled")
+
         # Create a text widget for code input
         self.code_input = Text(self.left_frame, bg = "#E2E2E2", borderwidth = 0, padx = 5, pady = 5)
-        self.code_input.place(relx = 0.01, rely = 0.01, relwidth = 0.98, height = 465)
+        self.code_input.place(relx = 0.11, rely = 0.01, relwidth = 0.88, height = 465)
         self.code_input.config(wrap = tk.WORD, font = ("Courier", 12))
 
         # Create a text widget for lexemes and tokens
@@ -131,7 +138,45 @@ class GUI:
             command = self.export_file
         )
         self.export_btn.place(relx = 0.5, rely = 1.24, anchor = 's', y = -150)
+
+        # Update number line text widget when enter key is pressed
+        self.code_input.bind("<Return>", self.update_number_line)
+
+        # Delete number line text widget when backspace is pressed
+        self.code_input.bind("<BackSpace>", self.handle_backspace)
                
+    # Update Number Line
+    def update_number_line(self, event):
+        # Get the text from code input
+        code = self.code_input.get(1.0, END)
+        self.line_count = 1
+        self.number_line.config(state = "normal")
+        self.number_line.delete(1.0, END)
+        self.number_line.insert(END, f"1\n")
+        
+        for i in range(len(code)):
+            if code[i] == "\n":
+                self.line_count += 1
+                self.number_line.insert(END, f"{self.line_count}\n")
+
+        self.number_line.config(state = "disabled")
+    
+    # When backspace key is pressed
+    def handle_backspace(self, event):
+        # Get the text from code input
+        code = self.code_input.get(1.0, END)
+        self.line_count = 1
+        self.number_line.config(state = "normal")
+        self.number_line.delete(1.0, END)
+        self.number_line.insert(END, f"1\n")
+
+        for i in range(len(code)):
+            if code[i - 1] == "\n":
+                self.line_count += 1
+                self.number_line.insert(END, f"{self.line_count}\n")
+
+        self.number_line.config(state = "disabled")
+
     # Open DSCODE file
     def open_file(self):
         # Open a specific type of file, for example, a .txt file
