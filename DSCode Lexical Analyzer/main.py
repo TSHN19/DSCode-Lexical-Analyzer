@@ -163,7 +163,6 @@ class GUI:
     
     # When backspace key is pressed
     def handle_backspace(self, event):
-        # Get the text from code input
         code = self.code_input.get(1.0, END)
         self.line_count = 1
         self.number_line.config(state = "normal")
