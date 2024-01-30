@@ -234,7 +234,7 @@ class GUI:
     def run_file(self):
         code = self.code_input.get(1.0, END)
         self.lexemes, self.lexemes_display, self.tokens, self.number_line = lexical_analyzer(code)
-        self.parser_lines, self.parser_result = syntax_analyzer(self.tokens, self.number_line)
+        self.parser_lines, self.parser_result = syntax_analyzer(self.number_line, self.tokens, self.lexemes)
 
         # Update code input text widget
         self.display.config(state = "normal")
