@@ -1,295 +1,402 @@
-from dsc_lexer import lexical_analyzer
-from dsc_parser import syntax_analyzer
+from tokentypes import TT_Operators, TT_Delimiters
+from grammar import G_Operand
 
-# GUI Library Import
-from tkinter.filedialog import askopenfilename, asksaveasfile, asksaveasfilename
-from tkinter import *
-import tkinter as tk
-from pil import Image, ImageTk
+class Node:
+    def __init__(self, value, children=None):
+        self.value = value
+        self.children = children or []
 
-class GUI:
-    def __init__(self):
-        self.root = Tk()
-        self.root.geometry("930x662")
-        self.root.configure(bg = "#393E46")
-        self.root.title("DSCODE Lexical Analyzer")
-        self.root.resizable(False, False)
+def syntax_analyzer(number_line, tokens, lexemes):
+    parser_result = []
+    parser_lines = []
+    statements = []
+    number_line_copy = number_line
+    tokens_copy = tokens
+    lexemes_copy = lexemes
+
+    # Iterate through each tokens
+    while tokens_copy:
+        print("Iterating")
+
+        if "ERROR" in tokens_copy[0]:
+            parser_lines.append(number_line_copy.pop(0))
+            parser_result.append("Invalid Token")
+            tokens_copy.pop(0)
+            lexemes_copy.pop(0)
         
-        # DSCODE Label
-        label = Label(
-            self.root, 
-            text = "DSCODE", 
-            fg = "white", 
-            bg = "#393E46", 
-            font = ("Inter", 35, "bold"))
-        label.place(x = 35, y = 18)
+        elif tokens_copy[0] == "DATATYPE_KW":
+            print("Declaration") 
+            pd = parse_declaration(number_line_copy, tokens_copy, lexemes_copy, parser_lines, parser_result)
+            statements.append(pd[0])
+            parser_lines = pd[1]
+            parser_result = pd[2]
 
-        # .dsc Label
-        label = Label(
-            self.root, 
-            text = "(.dsc)", 
-            fg = "white", 
-            bg = "#393E46", 
-            font = ("Inter", 25, "bold"))
-        label.place(x = 250, y = 28)
+        elif tokens_copy[0] == "CTRLFLOW_KW":
+            statements.append(parse_controlflow(number_line_copy, tokens_copy, lexemes_copy, parser_lines, parser_result))
 
-        # Left Frame: Code Input
-        self.left_frame = Frame(
-            master = self.root, 
-            width = 525, 
-            height = 390, 
-            bg = "#E2E2E2", 
-            highlightthickness = 2.3, 
-            highlightbackground = "black")
-        self.left_frame.place(x = 35, y = 90)
-        self.left_frame.pack_propagate(False)
-
-        # Right Frame: Lexical Analysis
-        self.right_frame = Frame(
-            master = self.root, 
-            width = 300, 
-            height = 540, 
-            bg = "#E2E2E2", 
-            highlightthickness = 2.3, 
-            highlightbackground = "black")
-        self.right_frame.place(x = 595, y = 90)
-        self.right_frame.pack_propagate(False)
-
-        # Third Frame: Syntax Analysis
-        self.third_frame = Frame(
-            master = self.root, 
-            width = 525, 
-            height = 135, 
-            bg = "#E2E2E2", 
-            highlightthickness = 2.3, 
-            highlightbackground = "black")
-        self.third_frame.place(x = 35, y = 495)
-        self.third_frame.pack_propagate(False)
-
-        # Create a text widget for syntax errors
-        self.syntax_errors = Text(self.third_frame, bg = "#E2E2E2", borderwidth = 0, padx = 5, pady = 5)
-        self.syntax_errors.place(relx = 0.01, y = 18, relwidth = 0.98, height = 108)
-        self.syntax_errors.config(state = "disabled", wrap = tk.WORD, font = ("Courier", 10), spacing1 = 4)
-
-        # Create a text widget for code input number line
-        self.number_line_left = Text(self.left_frame, bg = "#E2E2E2", borderwidth = 0, padx = 5, pady = 5)
-        self.number_line_left.place(relx = 0.01, rely = 0.01, relwidth = 0.10, height = 320)
-        self.number_line_left.config(wrap = tk.WORD, font = ("Courier", 12))
-        self.number_line_left.insert(END, f"1\n")
-        self.number_line_left.config(state = "disabled")
-
-        # Create a text widget for code input
-        self.code_input = Text(self.left_frame, bg = "#E2E2E2", borderwidth = 0, padx = 5, pady = 5)
-        self.code_input.place(relx = 0.11, rely = 0.01, relwidth = 0.88, height = 320)
-        self.code_input.config(wrap = tk.WORD, font = ("Courier", 12))
-
-        # Create a text widget for output number line
-        self.number_line_right = Text(self.right_frame, bg = "#E2E2E2", borderwidth = 0, padx = 5, pady = 5)
-        self.number_line_right.place(relx = 0.01, y = 25, relwidth = 0.18, height = 400)
-        self.number_line_right.config(state = "disabled", wrap = tk.WORD, font = ("Courier", 10), spacing1 = 4)
-
-        # Create a text widget for lexemes and tokens
-        self.display = Text(self.right_frame, bg = "#E2E2E2", borderwidth = 0, padx = 5, pady = 5)
-        self.display.place(relx = 0.2, y = 25, relwidth = 0.78, height = 400)
+        elif tokens_copy[0] == "KEYWORD":
+            statements.append(parse_otherkeywords(number_line_copy, tokens_copy, lexemes_copy, parser_lines, parser_result))
         
-        # Add a sideway scrollbar for lexemes and tokens
-        scrollbar = tk.Scrollbar(self.right_frame, orient = HORIZONTAL)
-        scrollbar.config(command = self.display.xview, bg = "#E2E2E2")
-        scrollbar.place(relx = 0.01, y = 450, relwidth = 0.98, height = 20)
-        self.display.config(state = "disabled", width = self.display.winfo_screenwidth(), xscrollcommand = True, wrap = NONE, font = ("Courier", 10), spacing1 = 4)
+        elif tokens_copy[0] == "IDENTIFIER":
+            statements.append(parse_assignment(number_line_copy, tokens_copy, lexemes_copy, parser_lines, parser_result))
 
-        # Syntax Errors Label
-        lexeme_label = Label(master = self.third_frame, text = "SYNTAX ERRORS", fg = "black", bg = "#E2E2E2", font = ("Inter", 10, "bold"))
-        lexeme_label.place(relx = 0.01, y = 5)
-        
-        # Lexeme Label
-        lexeme_label = Label(master = self.right_frame, text = "LEXEME", fg = "black", bg = "#E2E2E2", font = ("Inter", 10, "bold"))
-        lexeme_label.place(relx = 0.21, y = 10)
-        
-        # Token Label
-        token_label = Label(master = self.right_frame, text = "TOKEN", fg = "black", bg = "#E2E2E2", font = ("Inter", 10, "bold"))
-        token_label.place(relx = 0.64, y = 10)
+        else:
+            parser_lines.append(number_line_copy.pop(0))
+            parser_result.append("SYNTAX ERROR")
+            tokens_copy.pop(0)
+            lexemes_copy.pop(0)
 
-        # Open DSCODE file button
-        original_image = Image.open(r'C:\GitHub\DSCode-Lexical-Analyzer\DSCode Lexical Analyzer\Images\open.png')
-        resized_image = original_image.resize((50, 50))
-        self.add_open_img = ImageTk.PhotoImage(resized_image)
+    # return Node("Program", statements)
+    print("Iteration Complete")
+    print(parser_lines, parser_result)
+    return parser_lines, parser_result
 
-        self.open_btn = Button (
-            master = self.left_frame, 
-            image = self.add_open_img, 
-            borderwidth = 0, 
-            highlightthickness = 0, 
-            command = self.open_file
-        )
-        self.open_btn.place(relx = 0.07, rely = 1.35, anchor = 's', y = -150)
+def pop_first_element(number_line, tokens, lexemes):
+    tokens.pop(0)
+    lexemes.pop(0)
+    number_line_value = number_line.pop(0)
+    return number_line_value
 
-        # Save DSCODE file button
-        original_save_image = Image.open(r'C:\GitHub\DSCode-Lexical-Analyzer\DSCode Lexical Analyzer\Images\save.png')
-        resized_save_image = original_save_image.resize((50, 50))
-        self.add_save_img = ImageTk.PhotoImage(resized_save_image)
-
-        self.save_btn = Button (
-            master = self.left_frame, 
-            image = self.add_save_img, 
-            borderwidth = 0, 
-            highlightthickness = 0, 
-            command = self.save_file
-        )
-        self.save_btn.place(relx = 0.19, rely = 1.35, anchor = 's', y = -150)
-
-        # Run Lexical Analyzer button
-        original_run_image = Image.open(r'C:\GitHub\DSCode-Lexical-Analyzer\DSCode Lexical Analyzer\Images\run.png')
-        resized_run_image = original_run_image.resize((65, 65))
-        self.add_run_img = ImageTk.PhotoImage(resized_run_image)
-        self.run_btn = Button (
-            master = self.left_frame, 
-            image = self.add_run_img, 
-            borderwidth = 0, 
-            highlightthickness = 0, 
-            command = self.run_file
-        )
-        self.run_btn.place(relx = 0.91, rely = 1.35, anchor = 's', y = -150)
-        
-        # Export Analysis button
-        original_export_image = Image.open(r'C:\GitHub\DSCode-Lexical-Analyzer\DSCode Lexical Analyzer\Images\export.png')
-        resized_export_image = original_export_image.resize((180, 35))
-        self.add_export_img = ImageTk.PhotoImage(resized_export_image)
-
-        self.export_btn = Button (
-            master = self.right_frame, 
-            image = self.add_export_img, 
-            borderwidth = 0, 
-            highlightthickness = 0,
-            command = self.export_file
-        )
-        self.export_btn.place(relx = 0.5, rely = 1.24, anchor = 's', y = -150)
-
-        # Update number line text widget when enter key is pressed
-        self.code_input.bind("<Return>", self.update_number_line)
-
-        # Delete number line text widget when backspace is pressed
-        self.code_input.bind("<BackSpace>", self.handle_backspace)
-               
-    # Update Number Line
-    def update_number_line(self, event):
-        # Get the text from code input
-        code = self.code_input.get(1.0, END)
-        self.line_count_list = [1]
-        self.line_count = 1
-        self.number_line_left.config(state = "normal")
-        self.number_line_left.delete(1.0, END)
-        self.number_line_left.insert(END, f"1\n")
-        
-        for i in range(len(code)):
-            if code[i] == "\n":
-                self.line_count += 1
-                self.number_line_left.insert(END, f"{self.line_count}\n")
-                self.line_count_list.append(str(self.line_count))
-
-        self.number_line_left.config(state = "disabled")
+def parse_declaration(number_line, tokens, lexemes, lines, result):
+    tk = pop_first_element(number_line, tokens, lexemes)
+    print("Data Type")
     
-    # When backspace key is pressed
-    def handle_backspace(self, event):
-        # Get the text from code input
-        code = self.code_input.get(1.0, END)
-        self.line_count_list = [1]
-        self.line_count = 1
-        self.number_line_left.config(state = "normal")
-        self.number_line_left.delete(1.0, END)
-        self.number_line_left.insert(END, f"1\n")
-        
-        for i in range(len(code)):
-            if code[i] == "\n":
-                self.line_count += 1
-                self.number_line_left.insert(END, f"{self.line_count}\n")
-                self.line_count_list.append(str(self.line_count))
+    if tokens and tokens[0] == "IDENTIFIER":
+        print("Identifier")
+        declaration = tokens.pop(0)
+        lexemes.pop(0)
+        idt_line_value = number_line.pop(0)
 
-        self.number_line_left.config(state = "disabled")
-
-    # Open DSCODE file
-    def open_file(self):
-        # Open a specific type of file, for example, a .txt file
-        file_path = askopenfilename(filetypes=[("DSCode Files", "*.dsc")])
-        
-        if file_path:
-        # Read the file and use it as input in the text widget
-            with open(file_path, "r") as file:
-                self.code_input.delete(1.0, END)
-                self.code_input.insert(END, file.read())
-        
-        
-    # Save DSCODE file
-    def save_file(self):
-        file = asksaveasfile(mode = 'w', defaultextension='*.dsc', filetypes=[("DSCode Files", "*.dsc")])
-
-        if file is None:
-            return
-        
-        text = self.code_input.get(1.0, END)
-        file.write(text)
-        file.close()
-
-    # Run Lexical Analyzer
-    def run_file(self):
-        code = self.code_input.get(1.0, END)
-        self.lexemes, self.lexemes_display, self.tokens, self.number_line = lexical_analyzer(code)
-
-        # Update code input text widget
-        self.display.config(state = "normal")
-        self.display.delete(1.0, END)
-
-        for item1, item2 in zip(self.lexemes_display, self.tokens):
-            self.display.insert(END, f"{item1}\t\t{item2}\n")
-
-        self.display.config(state = "disabled")
-
-        # Update output text widget
-        self.number_line_right.config(state = "normal")
-        self.number_line_right.delete(1.0, END)
-
-        for i in range(len(self.number_line)):
-            self.number_line_right.insert(END, f"{self.number_line[i]}\n")
-
-        self.number_line_right.config(state = "disabled")
-
-        self.parser_lines, self.parser_result = syntax_analyzer(self.number_line, self.tokens, self.lexemes)
-
-        #Update syntax errors text widget
-        self.syntax_errors.config(state = "normal")
-        self.syntax_errors.delete(1.0, END)
-
-        for item1, item2 in zip(self.parser_lines, self.parser_result):
-            self.syntax_errors.insert(END, f"Error in Line {item1}:\t{item2}\n")
-
-        self.syntax_errors.config(state = "disabled")
-
-    # Export Analysis
-    def export_file(self):
-        # Create a text file and save it
-        file_path2 = asksaveasfilename(defaultextension='.txt', filetypes=[('Text Files', '.txt')])
-        if not file_path2:
-            return
-
-        # Set the width for each column
-        token_width = 30
-
-        # Find the maximum length of lexemes
-        max_lexeme_length = max(len(lexeme) for lexeme in self.lexemes)
-        lexeme_width = max(max_lexeme_length, 30)  # Set a minimum width of 30 for lexemes
-
-        # Text file contents
-        with open(file_path2, mode='w') as export:
-            export.write("\nSymbol Table\n\n")
-            export.write(f"={'=' * lexeme_width}{'=' * (15 - lexeme_width)}==============================================\n")
-            export.write(f"\tLEXEMES{' ' * (lexeme_width - 7)}TOKENS{' ' * (token_width - 6)}\n")
-            export.write(f"={'=' * lexeme_width}{'=' * (15 - lexeme_width)}==============================================\n")
-            for item1, item2, item3 in zip(self.number_line, self.lexemes, self.tokens):
-                # Left-justify the text in each column with the specified width
-                export.write(f"{item1}\t{item2.ljust(lexeme_width)}{item3.ljust(token_width)}\n")
-
-        export.close()
+        if tokens and tokens[0] == "COMMA":
+            pop_first_element(number_line, tokens, lexemes)
+            node = parse_muldec(number_line, tokens, lexemes, lines, result)
+            return node, lines, result
             
-# Show the Application Window
-app = GUI()
-app.root.mainloop()
+        elif tokens and tokens[0] == "SEMICOLON":
+            print("Semicolon")
+            node = Node("Declaration", [declaration])
+            pop_first_element(number_line, tokens, lexemes)
+            return node, lines, result
+            
+        else:
+            print("Error")
+            print(lines, result)
+            lines.append(idt_line_value)
+            result.append("Expected semicolon ';' after declaration")
+            node = Node("", [])
+            return node, lines, result
+
+    else:
+        pop_first_element(number_line, tokens, lexemes)
+        print("Error")
+        print(lines, result)
+        lines.append(tk)
+        result.append("Expected Identifier after DataType")
+        node = Node("", [])
+        return node, lines, result
+
+def parse_muldec(number_line, tokens, lexemes, lines, result):
+    return
+
+def parse_controlflow(number_line, tokens, lexemes, lines, result):
+    if lexemes[0] == "break":
+        return
+    
+    elif lexemes[0] == "continue":
+        return
+    
+    elif lexemes[0] == "do":
+        return
+    
+    elif lexemes[0] == "else":
+        return
+     
+    elif lexemes[0] == "for":
+        for_line_value = pop_first_element(number_line, tokens, lexemes)
+
+        if tokens[0] == "LPAREN":
+            lparen_line_value = pop_first_element(number_line, tokens, lexemes)
+            initialization = parse_statement(number_line, tokens, lexemes, lines, result)
+
+            if tokens[0] == "SEMICOLON":
+                semicolon_line_value = pop_first_element(number_line, tokens, lexemes)
+                condition = parse_expression(number_line, tokens, lexemes, lines, result)
+
+                if tokens[0] == "SEMICOLON":
+                    semicolon2_line_value = pop_first_element(number_line, tokens, lexemes)
+                    increment = parse_expression(number_line, tokens, lexemes, lines, result)
+
+                    if tokens[0] == "RPAREN":
+                        pop_first_element(number_line, tokens, lexemes)
+                        body = parse_statement(number_line, tokens, lexemes, lines, result)
+                        return Node("ForLoop", [initialization, condition, increment, body])
+                    else:
+                        lines.append(semicolon2_line_value)
+                        result.append("Expected ')' after '(' in expression")
+
+                else:
+                    lines.append(semicolon_line_value)
+                    result.append("Expected semicolon ';' after initialization")
+            else:
+                lines.append(lparen_line_value)
+                result.append("Expected semicolon ';' after initialization")
+            
+        else:
+            lines.append(for_line_value)
+            result.append("Invalid for loop syntax")
+    
+    elif lexemes[0] == "goto":
+        return
+    
+    elif lexemes[0] == "if":
+        return
+    
+    elif lexemes[0] == "return":
+        return
+    
+    elif lexemes[0] == "switch":
+        return
+    
+    elif lexemes[0] == "while":
+        number_line_value = pop_first_element(number_line, tokens, lexemes)
+
+        if tokens[0] == "LPAREN":
+            lparen_line_value = pop_first_element(number_line, tokens, lexemes)
+            condition = parse_expression(number_line, tokens, lexemes, lines, result)
+            
+            if tokens[0] == "RPAREN":
+                pop_first_element(number_line, tokens, lexemes)
+                body = parse_statement(number_line, tokens, lexemes, lines, result)
+                return Node("WhileLoop", [condition, body])
+
+            else:
+                lines.append(lparen_line_value)
+                result.append("Expected ')' after '(' in expression")
+                
+        else:
+            lines.append(number_line_value)
+            result.append("Invalid for while loop syntax")
+
+
+def parse_otherkeywords(number_line, tokens, lexemes, lines, result):
+    return
+
+def parse_statement(number_line, tokens, lexemes, lines, result):
+    return
+
+# Assignment, Addition, Subtraction, Multiplication, Division, Modulo, Bitwise (AND, OR, XOR), Right and Left Shift Assignment
+def parse_assignment(number_line, tokens, lexemes, lines, result):
+    identifier = tokens.pop(0)
+    lexemes.pop(0)
+    number_line_value = number_line.pop(0)
+
+    if tokens and tokens[0] in ("ASGN_OP", "ADDASGN_OP", "SUBASGN_OP", "MULTASGN_OP", "DIVASGN_OP", "MODASGN_OP", 
+        "BTWANDASGN_OP","BTWORASGN_OP", "BTWXORASGN_OP", "RSHIFTASGN_OP", "LSHIFTASGN_OP", "INTRSCT_OP", "UNT_OP"):
+        pop_first_element(number_line, tokens, lexemes)
+        expression = parse_expression(number_line, tokens, lexemes, lines, result)
+        return Node("Assignment", [Node(identifier), expression])
+    else:
+        lines.append(number_line_value)
+        result.append("Expected '=' after identifier in assignment")
+
+def parse_identifier(number_line, tokens, lexemes, lines, result):
+    if tokens and tokens[0] == "IDENTIFIER":
+        lexemes.pop(0)
+        number_line.pop(0)
+        return tokens.pop(0)
+    else:
+        lines.append(number_line[0])
+        result.append("Expected identifier")
+
+"""
+E X P R E S S I O N S   H A N D L I N G
+Check expressions and operators used following their order of precedence
+    1. PARENTHESIS
+    2. UNARY OPERATORS: ++, --, !, ~
+    3. MULTIPLICATIVE OPERATORS: *, /, %
+    4. ADDITIVE OPERATORS: +, -
+    5. SHIFT OPERATORS: <<, >>
+    6. RELATIONAL OPERATORS: <, >, <=, >=
+    7. EQUALITY OPERATORS: !=, ==
+    8. BITWISE AND OPERATOR: &
+    9. BITWISE XOR OPERATOR: ^
+    10.BITWISE OR OPERATOR: |
+    11.LOGICAL AND OPERATOR: &&
+    12.LOGICAL OR OPERATOR: ||
+
+    Kulang: DSCODE Operators
+"""
+
+def parse_expression(number_line, tokens, lexemes, lines, result):
+    node = parse_logical_or(number_line, tokens, lexemes, lines, result)
+    return node
+
+# Logical OR Operator
+def parse_logical_or(number_line, tokens, lexemes, lines, result):
+    node = parse_logical_and(number_line, tokens, lexemes, lines, result)
+
+    while tokens and tokens[0] == "LOGOR_OP":
+        operator = tokens.pop(0)
+        lexemes.pop(0)
+        number_line.pop(0)
+        right_node = parse_logical_and(number_line, tokens, lexemes, lines, result)
+        node = Node(operator, [node, right_node])
+    
+    return node
+
+# Logical AND Operator
+def parse_logical_and(number_line, tokens, lexemes, lines, result):
+    node = parse_bitwise_or(number_line, tokens, lexemes, lines, result)
+
+    while tokens and tokens[0] == "LOGAND_OP":
+        operator = tokens.pop(0)
+        lexemes.pop(0)
+        number_line.pop(0)
+        right_node = parse_bitwise_or(number_line, tokens, lexemes, lines, result)
+        node = Node(operator, [node, right_node])
+    
+    return node
+
+# Bitwise OR Operator
+def parse_bitwise_or(number_line, tokens, lexemes, lines, result):
+    node = parse_bitwise_xor(number_line, tokens, lexemes, lines, result)
+
+    while tokens and tokens[0] == "BTWOR_OP":
+        operator = tokens.pop(0)
+        lexemes.pop(0)
+        number_line.pop(0)
+        right_node = parse_bitwise_xor(number_line, tokens, lexemes, lines, result)
+        node = Node(operator, [node, right_node])
+    
+    return node
+
+# Bitwise XOR Operator
+def parse_bitwise_xor(number_line, tokens, lexemes, lines, result):
+    node = parse_bitwise_and(number_line, tokens, lexemes, lines, result)
+
+    while tokens and tokens[0] == "BTWXOR_OP":
+        operator = tokens.pop(0)
+        lexemes.pop(0)
+        number_line.pop(0)
+        right_node = parse_bitwise_and(number_line, tokens, lexemes, lines, result)
+        node = Node(operator, [node, right_node])
+    
+    return node
+
+# Bitwise AND Operator
+def parse_bitwise_and(number_line, tokens, lexemes, lines, result):
+    node = parse_equality(number_line, tokens, lexemes, lines, result)
+
+    while tokens and tokens[0] == "BTWAND_OP":
+        operator = tokens.pop(0)
+        lexemes.pop(0)
+        number_line.pop(0)
+        right_node = parse_equality(number_line, tokens, lexemes, lines, result)
+        node = Node(operator, [node, right_node])
+    
+    return node
+
+# Not Equal To and Equal To Operators
+def parse_equality(number_line, tokens, lexemes, lines, result):
+    node = parse_relational(number_line, tokens, lexemes, lines, result)
+
+    while tokens and tokens[0] in ("NOTEQLTO_OP", "EQLTO_OP"):
+        operator = tokens.pop(0)
+        lexemes.pop(0)
+        number_line.pop(0)
+        right_node = parse_relational(number_line, tokens, lexemes, lines, result)
+        node = Node(operator, [node, right_node])
+    
+    return node
+
+# Greater Than, Less Than, Greater Than or Equal To, and Less Than or Equal To Operators
+def parse_relational(number_line, tokens, lexemes, lines, result):
+    node = parse_shift(number_line, tokens, lexemes, lines, result)
+
+    while tokens and tokens[0] in ("GRTRTHN_OP", "LSSTHN_OP", "GRTREQL_OP", "LSSEQL_OP"):
+        operator = tokens.pop(0)
+        lexemes.pop(0)
+        number_line.pop(0)
+        right_node = parse_shift(number_line, tokens, lexemes, lines, result)
+        node = Node(operator, [node, right_node])
+    
+    return node
+
+# Right Shift and Left Shift Operators
+def parse_shift(number_line, tokens, lexemes, lines, result):
+    node = parse_additive(number_line, tokens, lexemes, lines, result)
+
+    while tokens and tokens[0] in ("RSHIFT_OP", "LSHIFT_OP"):
+        operator = tokens.pop(0)
+        lexemes.pop(0)
+        number_line.pop(0)
+        right_node = parse_additive(number_line, tokens, lexemes, lines, result)
+        node = Node(operator, [node, right_node])
+    
+    return node
+
+# Plus and Minus Operators
+def parse_additive(number_line, tokens, lexemes, lines, result):
+    node = parse_multiplicative(number_line, tokens, lexemes, lines, result)
+
+    while tokens and tokens[0] in ("PLUS_OP", "MINUS_OP"):
+        operator = tokens.pop(0)
+        lexemes.pop(0)
+        number_line.pop(0)
+        right_node = parse_multiplicative(number_line, tokens, lexemes, lines, result)
+        node = Node(operator, [node, right_node])
+    
+    return node
+
+# Multiply, Divide, and Modulo Operators
+def parse_multiplicative(number_line, tokens, lexemes, lines, result):
+    node = parse_unary(number_line, tokens, lexemes, lines, result)
+
+    while tokens and tokens[0] in ("MULTIPLY_OP", "DIVIDE_OP", "MODULO_OP"):
+        operator = tokens.pop(0)
+        lexemes.pop(0)
+        number_line.pop(0)
+        right_node = parse_unary(number_line, tokens, lexemes, lines, result)
+        node = Node(operator, [node, right_node])
+    
+    return node
+
+# Increment, Decrement, Logical Not, and Bitwise Not Operators
+def parse_unary(number_line, tokens, lexemes, lines, result):
+    node = parse_factor(number_line, tokens, lexemes, lines, result)
+
+    while tokens and tokens[0] in ("INCR_OP", "DECR_OP", "LOGNOT_OP", "BTWNOT_OP"):
+        operator = tokens.pop(0)
+        lexemes.pop(0)
+        number_line.pop(0)
+        right_node = parse_factor(number_line, tokens, lexemes, lines, result)
+        node = Node(operator, [node, right_node])
+    
+    return node
+
+# Handle integer and float constants, identifiers, and parenthesis
+def parse_factor(number_line, tokens, lexemes, lines, result):
+    if tokens[0] in ("INT_CONST", "FLOAT_CONST", "IDENTIFIER"):
+        lexemes.pop(0)
+        number_line.pop(0)
+        return Node(tokens.pop(0))
+    
+    elif tokens[0] == "LPAREN":
+        tokens.pop(0)
+        lexemes.pop(0)
+        number_line_value = number_line.pop(0)
+        expression = parse_expression(number_line, tokens, lexemes, lines, result)
+
+        if tokens and tokens[0] == "RPAREN":
+            tokens.pop(0)
+            lexemes.pop(0)
+            number_line.pop(0)
+            return expression
+        else:
+            lines.append(number_line_value)
+            result.append("Expected ')' after '(' in expression")
+    
+    else:
+        lines.append(number_line[0])
+        result.append(f"ERROR Unexpected token: {tokens[0]}")
+
