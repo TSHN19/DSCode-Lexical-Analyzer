@@ -32,8 +32,8 @@ def parse_declaration(number_line, tokens, lexemes, lines, result, Node):
     # Error if data type is not followed by an identifier
     else:
         pop_first_element(number_line, tokens, lexemes)
-        error_expected_after(lines, popped_datatype[1], result, "Identifier", "DataType")
         node = Node("", [])
+        error_expected_after(lines, popped_datatype[1], result, "Identifier", "DataType")
         return node, lines, result
 
 def parse_multidec(number_line, tokens, lexemes, lines, result):
