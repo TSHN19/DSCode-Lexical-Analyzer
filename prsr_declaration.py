@@ -1,5 +1,5 @@
 from prsr_errors import error_missing_semicolon, error_expected_after
-from prsr_arraypop import pop_first_element
+from prsr_otherfunctions import pop_first_element
 
 # Check declaration grammar
 def parse_declaration(number_line, tokens, lexemes, lines, result, Node):
@@ -14,9 +14,9 @@ def parse_declaration(number_line, tokens, lexemes, lines, result, Node):
         # If identifer is followed by comma, multiple declaration
         if tokens and tokens[0] == "COMMA":
             pop_first_element(number_line, tokens, lexemes)
-            node = parse_muldec(number_line, tokens, lexemes, lines, result)
+            node = parse_multidec(number_line, tokens, lexemes, lines, result)
             return node, lines, result
-        
+
         # If identifier is followed by a semicolon
         elif tokens and tokens[0] == "SEMICOLON":
             node = Node("Declaration", [popped_identifier[0]])
@@ -36,5 +36,5 @@ def parse_declaration(number_line, tokens, lexemes, lines, result, Node):
         node = Node("", [])
         return node, lines, result
 
-def parse_muldec(number_line, tokens, lexemes, lines, result):
+def parse_multidec(number_line, tokens, lexemes, lines, result):
     return
