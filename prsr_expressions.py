@@ -31,24 +31,26 @@ def parse_expression(number_line, tokens, lexemes, lines, result, Node):
     return node
 
 # Logical OR Operator
-def parse_logical_or(number_line, tokens, lexemes, lines, result, Node):
-    node = parse_logical_and(number_line, tokens, lexemes, lines, result, Node)
+def parse_logical_or(number_line, tokens, lexemes, lines, result, Node, is_expression):
+    node = parse_logical_and(number_line, tokens, lexemes, lines, result, Node, is_expression)
 
     while tokens and tokens[0] == "LOGOR_OP":
         popped_values = pop_first_element(number_line, tokens, lexemes)
-        right_node = parse_logical_and(number_line, tokens, lexemes, lines, result, Node)
+        right_node = parse_logical_and(number_line, tokens, lexemes, lines, result, Node, is_expression)
         node = Node(popped_values[0], [node, right_node])
+        return node, popped_values[1]
     
     return node
 
 # Logical AND Operator
-def parse_logical_and(number_line, tokens, lexemes, lines, result, Node):
-    node = parse_bitwise_or(number_line, tokens, lexemes, lines, result, Node)
+def parse_logical_and(number_line, tokens, lexemes, lines, result, Node, is_expression):
+    node = parse_bitwise_or(number_line, tokens, lexemes, lines, result, Node, is_expression)
 
     while tokens and tokens[0] == "LOGAND_OP":
         popped_values = pop_first_element(number_line, tokens, lexemes)
-        right_node = parse_bitwise_or(number_line, tokens, lexemes, lines, result, Node)
+        right_node = parse_bitwise_or(number_line, tokens, lexemes, lines, result, Node, is_expression)
         node = Node(popped_values[0], [node, right_node])
+        return node, popped_values[1]
     
     return node
 
@@ -60,6 +62,7 @@ def parse_bitwise_or(number_line, tokens, lexemes, lines, result, Node, is_expre
         popped_values = pop_first_element(number_line, tokens, lexemes)
         right_node = parse_bitwise_xor(number_line, tokens, lexemes, lines, result, Node, is_expression)
         node = Node(popped_values[0], [node, right_node])
+        return node, popped_values[1]
     
     return node
 
@@ -71,6 +74,7 @@ def parse_bitwise_xor(number_line, tokens, lexemes, lines, result, Node, is_expr
         popped_values = pop_first_element(number_line, tokens, lexemes)
         right_node = parse_bitwise_and(number_line, tokens, lexemes, lines, result, Node, is_expression)
         node = Node(popped_values[0], [node, right_node])
+        return node, popped_values[1]
     
     return node
 
@@ -82,6 +86,7 @@ def parse_bitwise_and(number_line, tokens, lexemes, lines, result, Node, is_expr
         popped_values = pop_first_element(number_line, tokens, lexemes)
         right_node = parse_equality(number_line, tokens, lexemes, lines, result, Node, is_expression)
         node = Node(popped_values[0], [node, right_node])
+        return node, popped_values[1]
     
     return node
 
@@ -93,6 +98,7 @@ def parse_equality(number_line, tokens, lexemes, lines, result, Node, is_express
         popped_values = pop_first_element(number_line, tokens, lexemes)
         right_node = parse_relational(number_line, tokens, lexemes, lines, result, Node, is_expression)
         node = Node(popped_values[0], [node, right_node])
+        return node, popped_values[1]
     
     return node
 
@@ -104,6 +110,7 @@ def parse_relational(number_line, tokens, lexemes, lines, result, Node, is_expre
         popped_values = pop_first_element(number_line, tokens, lexemes)
         right_node = parse_shift(number_line, tokens, lexemes, lines, result, Node, is_expression)
         node = Node(popped_values[0], [node, right_node])
+        return node, popped_values[1]
     
     return node
 
@@ -115,6 +122,7 @@ def parse_shift(number_line, tokens, lexemes, lines, result, Node, is_expression
         popped_values = pop_first_element(number_line, tokens, lexemes)
         right_node = parse_additive(number_line, tokens, lexemes, lines, result, Node, is_expression)
         node = Node(popped_values[0], [node, right_node])
+        return node, popped_values[1]
     
     return node
 
@@ -126,6 +134,7 @@ def parse_additive(number_line, tokens, lexemes, lines, result, Node, is_express
         popped_values = pop_first_element(number_line, tokens, lexemes)
         right_node = parse_multiplicative(number_line, tokens, lexemes, lines, result, Node, is_expression)
         node = Node(popped_values[0], [node, right_node])
+        return node, popped_values[1]
     
     return node
 
@@ -136,7 +145,7 @@ def parse_multiplicative(number_line, tokens, lexemes, lines, result, Node, is_e
     while tokens and tokens[0] in ("MULTIPLY_OP", "DIVIDE_OP", "MODULO_OP"):
         popped_values = pop_first_element(number_line, tokens, lexemes)
         right_node = parse_unary(number_line, tokens, lexemes, lines, result, Node, is_expression)
-        node = Node(popped_values[0], [node, right_node])
+        return node, popped_values[1]
     
     return node
 
@@ -148,6 +157,7 @@ def parse_unary(number_line, tokens, lexemes, lines, result, Node, is_expression
         popped_values = pop_first_element(number_line, tokens, lexemes)
         right_node = parse_factor(number_line, tokens, lexemes, lines, result, Node, is_expression)
         node = Node(popped_values[0], [node, right_node])
+        return node, popped_values[1]
     
     return node
 
@@ -170,8 +180,12 @@ def parse_factor(number_line, tokens, lexemes, lines, result, Node, is_expressio
             expression if is_expression else bool_expression
 
         else:
+            node = Node("", [])
             error_expected_after(lines, popped_values[1], result, "')'", "'(' in expression")
+            return node, lines, result
     
     else:
+        node = Node("", [])
         error_unexpected_tokens(lines, number_line[0], result, tokens[0])
+        return node, lines, result, tokens[0]
 
