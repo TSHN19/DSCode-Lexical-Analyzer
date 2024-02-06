@@ -1,4 +1,4 @@
-from prsr_arraypop import pop_first_element
+from prsr_otherfunctions import pop_first_element
 from prsr_declaration import parse_declaration
 from prsr_controlflow import parse_controlflow
 from prsr_otherkeywords import parse_otherkeywords
@@ -8,6 +8,9 @@ class Node:
     def __init__(self, value, children=None):
         self.value = value
         self.children = children or []
+
+    def  __repr__(self):
+        return f"Node({self.value} : {self.children})"
 
 def syntax_analyzer(number_line, tokens, lexemes):
     parser_result = []
@@ -31,7 +34,8 @@ def syntax_analyzer(number_line, tokens, lexemes):
             statements.append(declaration[0])
             parser_lines = declaration[1]
             parser_result = declaration[2]
-
+            print(statements)
+            
         elif tokens_copy[0] == "CTRLFLOW_KW":
             statements.append(parse_controlflow(number_line_copy, tokens_copy, lexemes_copy, parser_lines, parser_result, Node))
 
@@ -39,15 +43,17 @@ def syntax_analyzer(number_line, tokens, lexemes):
             statements.append(parse_otherkeywords(number_line_copy, tokens_copy, lexemes_copy, parser_lines, parser_result, Node))
         
         elif tokens_copy[0] == "IDENTIFIER":
-            statements.append(parse_assignment(number_line_copy, tokens_copy, lexemes_copy, parser_lines, parser_result, Node))
+            assignment = parse_assignment(number_line_copy, tokens_copy, lexemes_copy, parser_lines, parser_result, Node)
+            statements.append(assignment[0])
+            parser_lines = assignment[1]
+            parser_result = assignment[2]
 
         else:
             popped_values = pop_first_element(number_line_copy, tokens_copy, lexemes_copy)
             parser_lines.append(popped_values[1])
             parser_result.append("SYNTAX ERROR")
 
-    # return Node("Program", statements)
-    print("Iteration Complete")
-    print(parser_lines, parser_result)
-    return parser_lines, parser_result
-
+    if statements is True:
+        return parser_lines, statements
+    else:
+        return parser_lines, parser_result
