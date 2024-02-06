@@ -99,7 +99,7 @@ class GUI:
         self.display.config(state = "disabled", width = self.display.winfo_screenwidth(), xscrollcommand = True, wrap = NONE, font = ("Courier", 10), spacing1 = 4)
 
         # Syntax Errors Label
-        lexeme_label = Label(master = self.third_frame, text = "SYNTAX ERRORS", fg = "black", bg = "#E2E2E2", font = ("Inter", 10, "bold"))
+        lexeme_label = Label(master = self.third_frame, text = "SYNTAX ANALYSIS", fg = "black", bg = "#E2E2E2", font = ("Inter", 10, "bold"))
         lexeme_label.place(relx = 0.01, y = 5)
         
         # Lexeme Label
