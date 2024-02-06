@@ -1,7 +1,7 @@
 from prsr_errors import error_missing_semicolon
-from prsr_arraypop import pop_first_element
+from prsr_otherfunctions import pop_first_element
 from prsr_errors import error_expected_after
-from prsr_expressions import parse_expression
+from prsr_expressions import parse_boolexpression
 
 assignment_operators = {
     "ASGN_OP", "ADDASGN_OP", "SUBASGN_OP", "MULTASGN_OP", "DIVASGN_OP", "MODASGN_OP", "BTWANDASGN_OP", 
@@ -15,7 +15,7 @@ def parse_assignment(number_line, tokens, lexemes, lines, result, Node):
     # If identifier is followed by an assignment operator
     if tokens and tokens[0] in assignment_operators:
         popped_operator = pop_first_element(number_line, tokens, lexemes)
-        expression = parse_expression(number_line, tokens, lexemes, lines, result, Node)
+        expression = parse_boolexpression(number_line, tokens, lexemes, lines, result, Node)
     
         # If expression is followed by semicolon
         if tokens and tokens[0] == "SEMICOLON":
@@ -31,4 +31,6 @@ def parse_assignment(number_line, tokens, lexemes, lines, result, Node):
     
     # Error if identifier is not followed by an assignment operator
     else:
+        node = Node("", [])
         error_expected_after(lines, popped_identifier[1], result, "'='", "identifier in assignment")
+        return node, lines, result
