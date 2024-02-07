@@ -11,37 +11,39 @@ def parse_otherkeywords(number_line, tokens, lexemes, lines, result, Node):
 
 # Const Keyword
 def parse_const(number_line, tokens, lexemes, lines, result, Node):
-    popped_const = pop_first_element(number_line, tokens, lexemes)  
+    popped_const = pop_first_element(number_line, tokens, lexemes)
     
     # If const is followed by a datatype
     if tokens and tokens[0] == "DATATYPE_KW":
         popped_datatype = pop_first_element(number_line, tokens, lexemes)
+        datatype = Node("DataType", [popped_datatype[2]])
 
         # If data type is followed by an identifier
         if tokens and tokens[0] == "IDENTIFIER":
             popped_identifier = pop_first_element(number_line, tokens, lexemes)
+            identifier = Node("Identifier", [popped_identifier[2]])
             
             # If identifier is followed by a semicolon
             if tokens and tokens[0] == "SEMICOLON":
-                node = Node("Const", [popped_datatype[0], popped_identifier[0]])
-                pop_first_element(number_line, tokens, lexemes)
-                return node, lines, result
+                node = Node("Const", [datatype, identifier])
+                popped_semicolon = pop_first_element(number_line, tokens, lexemes)
+                return node, popped_semicolon[1], result
         
             # Error if missing semicolon
             else:
-                node = Node("Error", [Node("Const", [Node("DataType", [popped_datatype[0]])])])
+                node = Node("Const", [datatype, identifier, Node("Error", [])])
                 error_missing_semicolon(lines, popped_identifier[1], result, "const")
-                return node, lines, result
+                return node, popped_identifier[1], result
             
         # Error if missing identifier
         else:
-            node = Node("Error", [Node("Const", [Node("DataType", [popped_datatype[0]])])])
-            error_expected_after(lines, popped_datatype[1], result, "Data Type", "Const")
+            node = Node("Const", [datatype, Node("Error", [])])
+            error_expected_after(lines, popped_datatype[1], result, "Identifier", "Data Type")
             return node, popped_datatype[1], result
 
     # Error if const is not followed by a datatype
     else:
-        node = Node("Error", [Node("Const", [])])
+        node = Node("Const", [Node("Error", [])])
         error_expected_after(lines, popped_const[1], result, "Data Type", "Const")
         return node, popped_const[1], result
     
