@@ -33,29 +33,21 @@ def syntax_analyzer(number_line, tokens, lexemes):
             declaration = parse_declaration(number_line_copy, tokens_copy, lexemes_copy, parser_lines, parser_result, Node)
             parser_nodes.append(declaration[0])
             print(declaration[0])
-            parser_lines = declaration[1]
-            parser_result = declaration[2]
             
         elif tokens_copy[0] == "CTRLFLOW_KW":
             controlflow = parse_controlflow(number_line_copy, tokens_copy, lexemes_copy, parser_lines, parser_result, Node)
             parser_nodes.append(controlflow[0])
             print(controlflow[0])
-            parser_lines = controlflow[1]
-            parser_result = controlflow[2]
 
         elif tokens_copy[0] == "KEYWORD":
             keywords = parse_otherkeywords(number_line_copy, tokens_copy, lexemes_copy, parser_lines, parser_result, Node)
             parser_nodes.append(keywords[0])
             print(keywords[0])
-            parser_lines = keywords[1]
-            parser_result = keywords[2]
         
         elif tokens_copy[0] == "IDENTIFIER":
             assignment = parse_assignment_statement(number_line_copy, tokens_copy, lexemes_copy, parser_lines, parser_result, Node)
             parser_nodes.append(assignment[0])
             print(assignment[0])
-            parser_lines = assignment[1]
-            parser_result = assignment[2]
 
         else:
             popped_values = pop_first_element(number_line_copy, tokens_copy, lexemes_copy)
