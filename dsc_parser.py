@@ -27,7 +27,7 @@ def syntax_analyzer(number_line, tokens, lexemes):
         if "ERROR" in tokens_copy[0]:
             popped_values = pop_first_element(number_line_copy, tokens_copy, lexemes_copy)
             parser_lines.append(popped_values[1])
-            parser_result.append("Invalid Token")
+            parser_result.append("Invalid Token : '" + popped_values[0] + "'")
         
         elif tokens_copy[0] == "DATATYPE_KW":
             declaration = parse_declaration(number_line_copy, tokens_copy, lexemes_copy, parser_lines, parser_result, Node)
@@ -37,12 +37,17 @@ def syntax_analyzer(number_line, tokens, lexemes):
             
         elif tokens_copy[0] == "CTRLFLOW_KW":
             controlflow = parse_controlflow(number_line_copy, tokens_copy, lexemes_copy, parser_lines, parser_result, Node)
+            print(controlflow[0])
             parser_nodes.append(controlflow[0])
             parser_lines = controlflow[1]
             parser_result = controlflow[2]
 
         elif tokens_copy[0] == "KEYWORD":
-            parser_nodes.append(parse_otherkeywords(number_line_copy, tokens_copy, lexemes_copy, parser_lines, parser_result, Node))
+            keywords = parse_otherkeywords(number_line_copy, tokens_copy, lexemes_copy, parser_lines, parser_result, Node)
+            parser_nodes.append(keywords[0])
+            print(keywords[0])
+            parser_lines = keywords[1]
+            parser_result = keywords[2]
         
         elif tokens_copy[0] == "IDENTIFIER":
             assignment = parse_assignment_statement(number_line_copy, tokens_copy, lexemes_copy, parser_lines, parser_result, Node)
@@ -53,10 +58,8 @@ def syntax_analyzer(number_line, tokens, lexemes):
         else:
             popped_values = pop_first_element(number_line_copy, tokens_copy, lexemes_copy)
             parser_lines.append(str(popped_values[1]))
-            parser_result.append("SYNTAX ERROR")
+            parser_result.append("SYNTAX ERROR : '" + popped_values[2] + "'")
 
-    if parser_nodes is True:
-        return parser_lines, parser_nodes
-    else:
-        return parser_lines, parser_result
+  
+    return parser_lines, parser_result
 

@@ -27,6 +27,10 @@ boolean_operators = [
 def parse_boolexpression(number_line, tokens, lexemes, lines, result, Node):
     is_expression = False
     node = parse_logical_or(number_line, tokens, lexemes, lines, result, Node, is_expression)
+
+    if node[0] == None:
+        return node[0], number_line, result
+
     lines = node[1]
 
     check_node = node[0].value 
