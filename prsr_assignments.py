@@ -43,16 +43,20 @@ def parse_assignment(number_line, tokens, lexemes, lines, result, Node):
 def parse_assignment_statement(number_line, tokens, lexemes, lines, result, Node):
     assignment_statement = parse_assignment(number_line, tokens, lexemes, lines, result, Node)
 
-    if tokens:
-        if tokens[0] == "SEMICOLON":
-            pop_first_element(number_line, tokens, lexemes)
-            return assignment_statement
-    
+    if assignment_statement[0] != None:
+        if tokens:
+            if tokens[0] == "SEMICOLON":
+                pop_first_element(number_line, tokens, lexemes)
+                return assignment_statement
+        
+            else:
+                node = None
+                error_missing_semicolon(lines, assignment_statement[1], result, "assignment expression")
+                return node, lines, result
         else:
             node = None
-            error_missing_semicolon(lines, assignment_statement[1], result, "assignment expression")
-            return node, lines, result
+            error_expected_after(lines, assignment_statement[1], result, "';'", "assignment expression")
+            return node, lines, result   
     else:
         node = None
-        error_expected_after(lines, assignment_statement[1], result, "';'", "assignment expression")
-        return node, lines, result   
+        return node, lines, result
