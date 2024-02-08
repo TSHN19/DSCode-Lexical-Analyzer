@@ -835,7 +835,7 @@ def parse_function(datatype, identifier, number_line, tokens, lexemes, lines, re
                 return node, lines.append(popped_semicolon[1]), result
             elif tokens and tokens[0] == "LBRACE":
                 function_body, lines, result = parse_statements(number_line, tokens, lexemes, lines, result, Node)
-                node = Node("Function", [datatype, identifier, parameters, function_body])
+                node = Node("Function", [datatype, identifier, parameters[0], function_body])
                 return node, lines, result
             elif tokens:
                 #error in parameter, no semicollon/rbrace
