@@ -27,7 +27,7 @@ def syntax_analyzer(number_line, tokens, lexemes):
             statement = parse_statements(number_line_copy, tokens_copy, lexemes_copy, parser_lines, parser_result, Node)
             parser_nodes.append(statement[0])
 
-        if "ERROR" in tokens_copy[0]:
+        if tokens and "ERROR" in tokens_copy[0]:
             popped_values = pop_first_element(number_line_copy, tokens_copy, lexemes_copy)
             parser_lines.append(popped_values[1])
             parser_result.append("Invalid Token")
@@ -292,13 +292,13 @@ def parse_unary(number_line, tokens, lexemes, lines, result, Node, is_expression
 
 # Handle integer and float constants, identifiers, and parenthesis
 def parse_factor(number_line, tokens, lexemes, lines, result, Node, is_expression):
-    if tokens[0] in ("INT_CONST", "FLOAT_CONST", "IDENTIFIER"):
+    if tokens and tokens[0]  in ("INT_CONST", "FLOAT_CONST", "IDENTIFIER"):
         popped_values = pop_first_element(number_line, tokens, lexemes)
         node = Node(popped_values[0], [popped_values[2]])
         return node, lines.append(popped_values[1])
     
     #check if it is followed by lparen
-    elif tokens[0] == "LPAREN":
+    elif tokens and tokens[0] == "LPAREN":
         popped_values = pop_first_element(number_line, tokens, lexemes)
 
         if is_expression:
@@ -319,8 +319,8 @@ def parse_factor(number_line, tokens, lexemes, lines, result, Node, is_expressio
     
     else:
         node = Node("Error", [])
-        error_unexpected_tokens(lines, number_line[0], result, tokens[0])
-        return node, lines.append(number_line[0]), result, tokens[0]
+        error_unexpected_tokens(lines, lines[-1], result, tokens[0])
+        return node, lines, result, tokens[0]
 
 def parse_controlflow(number_line, tokens, lexemes, lines, result, Node):
     if lexemes[0] == "break":
@@ -941,13 +941,20 @@ def declaration_assignment(popped_identifier, number_line, tokens, lexemes, line
         # Check if the identifier is followed by an assignment operator
         if tokens and tokens[0] in assignment_operators:
             popped_operator = pop_first_element(number_line, tokens, lexemes)
-            expression = parse_expression(number_line, tokens, lexemes, lines, result, Node)
-            assignments.append([popped_identifier, popped_operator[0], expression[0]])
 
-            if tokens and tokens[0] == "COMMA":
-                pop_first_element(number_line, tokens, lexemes)
+            if tokens:
+                expression = parse_expression(number_line, tokens, lexemes, lines, result, Node)
+                assignments.append([popped_identifier, popped_operator[0], expression[0]])
+
+                if tokens and tokens[0] == "COMMA":
+                    pop_first_element(number_line, tokens, lexemes)
+                else:
+                    continue
             else:
-                continue
+                node = Node("Assignment", [Node("Error", [])])
+                error_expected_after(lines, popped_operator[1], result, "right hand side operand", "operator")
+                return node, lines.append(popped_operator[1]), result
+            
         elif tokens and tokens[0] == "IDENTIFIER":
             popped_identifier = pop_first_element(number_line, tokens, lexemes)
             if tokens and tokens[0] in assignment_operators:
@@ -1003,7 +1010,7 @@ def parse_dscodeop(popped_identifier, number_line, tokens, lexemes, lines, resul
 
         if tokens and tokens[0] in ds_objects:
             dsobjects = pop_first_element(number_line, tokens, lexemes)
-            nodes.append(Node("Insert", [popped_identifier, popped_operator[2], dsobjects[2]]))
+            nodes.append(Node("Insert", [popped_identifier[0], popped_operator[2], dsobjects[2]]))
 
             if tokens:
                 if tokens and tokens[0] == "SEMICOLON":
