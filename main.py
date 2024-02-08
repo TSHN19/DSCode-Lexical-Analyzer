@@ -6,7 +6,7 @@ from dsc_parser import syntax_analyzer
 from tkinter.filedialog import askopenfilename, asksaveasfile, asksaveasfilename
 from tkinter import *
 import tkinter as tk
-from pil import Image, ImageTk
+from PIL import Image, ImageTk
 
 class GUI:
     def __init__(self):
@@ -117,7 +117,7 @@ class GUI:
         token_label.place(relx = 0.64, y = 10)
 
         # Open DSCODE file button
-        original_image = Image.open(r'C:\GitHub\DSCode-Lexical-Analyzer\Images\open.png')
+        original_image = Image.open(r'C:\Users\Jarlson\Downloads\3rd AY dwnld\PPL\DSCode-Lexical-Analyzer\Images\open.png')
         resized_image = original_image.resize((50, 50))
         self.add_open_img = ImageTk.PhotoImage(resized_image)
 
@@ -131,7 +131,7 @@ class GUI:
         self.open_btn.place(relx = 0.07, rely = 1.35, anchor = 's', y = -150)
 
         # Save DSCODE file button
-        original_save_image = Image.open(r'C:\GitHub\DSCode-Lexical-Analyzer\Images\save.png')
+        original_save_image = Image.open(r'C:\Users\Jarlson\Downloads\3rd AY dwnld\PPL\DSCode-Lexical-Analyzer\Images\save.png')
         resized_save_image = original_save_image.resize((50, 50))
         self.add_save_img = ImageTk.PhotoImage(resized_save_image)
 
@@ -145,7 +145,7 @@ class GUI:
         self.save_btn.place(relx = 0.19, rely = 1.35, anchor = 's', y = -150)
 
         # Run Lexical Analyzer button
-        original_run_image = Image.open(r'C:\GitHub\DSCode-Lexical-Analyzer\Images\run.png')
+        original_run_image = Image.open(r'C:\Users\Jarlson\Downloads\3rd AY dwnld\PPL\DSCode-Lexical-Analyzer\Images\run.png')
         resized_run_image = original_run_image.resize((65, 65))
         self.add_run_img = ImageTk.PhotoImage(resized_run_image)
         self.run_btn = Button (
@@ -158,7 +158,7 @@ class GUI:
         self.run_btn.place(relx = 0.91, rely = 1.35, anchor = 's', y = -150)
         
         # Export Analysis button
-        original_export_image = Image.open(r'C:\GitHub\DSCode-Lexical-Analyzer\Images\export.png')
+        original_export_image = Image.open(r'C:\Users\Jarlson\Downloads\3rd AY dwnld\PPL\DSCode-Lexical-Analyzer\Images\export.png')
         resized_export_image = original_export_image.resize((180, 35))
         self.add_export_img = ImageTk.PhotoImage(resized_export_image)
 
@@ -265,15 +265,18 @@ class GUI:
         self.syntax_errors.config(state = "normal")
         self.syntax_errors.delete(1.0, END)
 
-        if self.parser_result:
-            for item1, item2 in zip(self.parser_lines, self.parser_result):
-                self.syntax_errors.insert(END, f"Error in Line {item1}:\t{item2}\n")
-        
-        else:
-            for item3 in self.parser_node:
-                string = str(item3)
-                self.syntax_errors.insert(END, f"\n{string}")
-        
+        for item1, item2 in zip(self.parser_lines, self.parser_result):
+            self.syntax_errors.insert(END, f"Error in Line {item1}:\t{item2}\n")
+
+        for item3 in self.parser_node:
+            string = str(item3)
+            self.syntax_errors.insert(END, f"\n{string}")
+        '''
+        nodes_list = string.split("[")
+        for i in range(len(nodes_list)):
+            tab = " " * i
+            self.syntax_errors.insert(END, f"\n{tab}{nodes_list[i]}")'''
+
         self.syntax_errors.config(state = "disabled")
 
     # Export Analysis
