@@ -265,18 +265,15 @@ class GUI:
         self.syntax_errors.config(state = "normal")
         self.syntax_errors.delete(1.0, END)
 
-        for item1, item2 in zip(self.parser_lines, self.parser_result):
-            self.syntax_errors.insert(END, f"Error in Line {item1}:\t{item2}\n")
-
-        for item3 in self.parser_node:
-            string = str(item3)
-            self.syntax_errors.insert(END, f"\n{string}")
-        '''
-        nodes_list = string.split("[")
-        for i in range(len(nodes_list)):
-            tab = " " * i
-            self.syntax_errors.insert(END, f"\n{tab}{nodes_list[i]}")'''
-
+        if self.parser_result:
+            for item1, item2 in zip(self.parser_lines, self.parser_result):
+                self.syntax_errors.insert(END, f"Error in Line {item1}:\t{item2}\n")
+        
+        else:
+            for item3 in self.parser_node:
+                string = str(item3)
+                self.syntax_errors.insert(END, f"\n{string}")
+        
         self.syntax_errors.config(state = "disabled")
 
     # Export Analysis

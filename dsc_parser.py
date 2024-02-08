@@ -10,6 +10,7 @@ class Node:
         return f"Node({self.value} : {self.children})"
 
 def syntax_analyzer(number_line, tokens, lexemes):
+    
     parser_result = []
     parser_lines = []
     parser_nodes = []
@@ -38,7 +39,7 @@ def syntax_analyzer(number_line, tokens, lexemes):
         else:
             popped_values = pop_first_element(number_line_copy, tokens_copy, lexemes_copy)
             parser_lines.append(popped_values[1])
-            parser_result.append("SYNTAX ERROR")
+            parser_result.append("SYNTAX ERROR: '" + popped_values[2] + "'")
     
     
     return parser_lines, parser_result, parser_nodes
@@ -51,7 +52,7 @@ def parse_statements(number_line, tokens, lexemes, lines, result, Node):
             popped_values = pop_first_element(number_line, tokens, lexemes)
             node = None
             error_unexpected_tokens(lines, popped_values[1], result, "Error")
-            return node, popped_values[1], result
+            return node, lines.append(popped_values[1]), result
 
         elif tokens and tokens[0] == "LBRACE":
             popped_lbrace = pop_first_element(number_line, tokens, lexemes)
@@ -63,12 +64,12 @@ def parse_statements(number_line, tokens, lexemes, lines, result, Node):
                 
                 #Creating a compound node with all parsed nodes
                 node = [Node("Statements", [id]) for id in statements]
-                return node, popped_rbrace[1], result
+                return node, lines.append(popped_rbrace[1]), result
             else:
                 statement.append(Node("Error", []))
                 node = [Node("Statements", [id]) for id in statements]
                 error_expected_after(lines, popped_lbrace[1], result, "'}'", "'{' in expression")
-                return node, popped_lbrace[1], result
+                return node, lines.append(popped_lbrace[1]), result
 
         elif tokens[0] == "DATATYPE_KW":
             declaration = parse_declaration(number_line, tokens, lexemes, lines, result, Node)
@@ -94,7 +95,7 @@ def parse_statements(number_line, tokens, lexemes, lines, result, Node):
             popped_values = pop_first_element(number_line, tokens, lexemes)
             node = None
             error_invalid_syntax(lines, popped_values[1], result, "EWAN")
-            return node, popped_values[1], result
+            return node, lines.append(popped_values[1]), result
 
 """
 E X P R E S S I O N S   H A N D L I N G
@@ -145,152 +146,152 @@ def parse_expression(number_line, tokens, lexemes, lines, result, Node):
 # Logical OR Operator
 def parse_logical_or(number_line, tokens, lexemes, lines, result, Node, is_expression):
     node = parse_logical_and(number_line, tokens, lexemes, lines, result, Node, is_expression)
-    lines = node[1]
+    line = node[1]
 
     while tokens and tokens[0] == "LOGOR_OP":
         popped_values = pop_first_element(number_line, tokens, lexemes)
         right_node = parse_logical_and(number_line, tokens, lexemes, lines, result, Node, is_expression)
         node = Node(popped_values[0], [node[0], right_node[0]])
-        return node, lines
+        return node, line
     
-    return node[0], lines
+    return node[0], line
 
 # Logical AND Operator
 def parse_logical_and(number_line, tokens, lexemes, lines, result, Node, is_expression):
     node = parse_bitwise_or(number_line, tokens, lexemes, lines, result, Node, is_expression)
-    lines = node[1]
+    line = node[1]
 
     while tokens and tokens[0] == "LOGAND_OP":
         popped_values = pop_first_element(number_line, tokens, lexemes)
         right_node = parse_bitwise_or(number_line, tokens, lexemes, lines, result, Node, is_expression)
         node = Node(popped_values[0], [node[0], right_node[0]])
-        return node, lines
+        return node, line
     
-    return node[0], lines
+    return node[0], line
 
 # Bitwise OR Operator
 def parse_bitwise_or(number_line, tokens, lexemes, lines, result, Node, is_expression):
     node = parse_bitwise_xor(number_line, tokens, lexemes, lines, result, Node, is_expression)
-    lines = node[1]
+    line = node[1]
 
     while tokens and tokens[0] == "BTWOR_OP":
         popped_values = pop_first_element(number_line, tokens, lexemes)
         right_node = parse_bitwise_xor(number_line, tokens, lexemes, lines, result, Node, is_expression)
         node = Node(popped_values[0], [node[0], right_node[0]])
-        return node, lines
+        return node, line
     
-    return node[0], lines
+    return node[0], line
 
 # Bitwise XOR Operator
 def parse_bitwise_xor(number_line, tokens, lexemes, lines, result, Node, is_expression):
     node = parse_bitwise_and(number_line, tokens, lexemes, lines, result, Node, is_expression)
-    lines = node[1]
+    line = node[1]
 
     while tokens and tokens[0] == "BTWXOR_OP":
         popped_values = pop_first_element(number_line, tokens, lexemes)
         right_node = parse_bitwise_and(number_line, tokens, lexemes, lines, result, Node, is_expression)
         node = Node(popped_values[0], [node[0], right_node[0]])
-        return node, lines
+        return node, line
     
-    return node[0], lines
+    return node[0], line
 
 # Bitwise AND Operator
 def parse_bitwise_and(number_line, tokens, lexemes, lines, result, Node, is_expression):
     node = parse_equality(number_line, tokens, lexemes, lines, result, Node, is_expression)
-    lines = node[1]
+    line = node[1]
 
     while tokens and tokens[0] == "BTWAND_OP":
         popped_values = pop_first_element(number_line, tokens, lexemes)
         right_node = parse_equality(number_line, tokens, lexemes, lines, result, Node, is_expression)
         node = Node(popped_values[0], [node[0], right_node[0]])
-        return node, lines
+        return node, line
     
-    return node[0], lines
+    return node[0], line
 
 # Not Equal To and Equal To Operators
 def parse_equality(number_line, tokens, lexemes, lines, result, Node, is_expression):
     node = parse_relational(number_line, tokens, lexemes, lines, result, Node, is_expression)
-    lines = node[1]
+    line = node[1]
 
     while tokens and tokens[0] in ("NOTEQLTO_OP", "EQLTO_OP"):
         popped_values = pop_first_element(number_line, tokens, lexemes)
         right_node = parse_relational(number_line, tokens, lexemes, lines, result, Node, is_expression)
         node = Node(popped_values[0], [node[0], right_node[0]])
-        return node, lines
+        return node, line
     
-    return node[0], lines
+    return node[0], line
 
 # Greater Than, Less Than, Greater Than or Equal To, and Less Than or Equal To Operators
 def parse_relational(number_line, tokens, lexemes, lines, result, Node, is_expression):
     node = parse_shift(number_line, tokens, lexemes, lines, result, Node, is_expression)
-    lines = node[1]
+    line = node[1]
 
     while tokens and tokens[0] in ("GRTRTHN_OP", "LSSTHN_OP", "GRTREQL_OP", "LSSEQL_OP", "SRCH_OP"):
         popped_values = pop_first_element(number_line, tokens, lexemes)
         right_node = parse_shift(number_line, tokens, lexemes, lines, result, Node, is_expression)
         node = Node(popped_values[0], [node[0], right_node[0]])
-        return node, lines
+        return node, line
     
-    return node[0], lines
+    return node[0], line
 
 # Right Shift and Left Shift Operators
 def parse_shift(number_line, tokens, lexemes, lines, result, Node, is_expression):
     node = parse_additive(number_line, tokens, lexemes, lines, result, Node, is_expression)
-    lines = node[1]
+    line = node[1]
 
     while tokens and tokens[0] in ("RSHIFT_OP", "LSHIFT_OP"):
         popped_values = pop_first_element(number_line, tokens, lexemes)
         right_node = parse_additive(number_line, tokens, lexemes, lines, result, Node, is_expression)
         node = Node(popped_values[0], [node[0], right_node[0]])
-        return node, lines
+        return node, line
     
-    return node[0], lines
+    return node[0], line
 
 # Plus and Minus Operators
 def parse_additive(number_line, tokens, lexemes, lines, result, Node, is_expression):
     node = parse_multiplicative(number_line, tokens, lexemes, lines, result, Node, is_expression)
-    lines = node[1]
+    line = node[1]
 
     while tokens and tokens[0] in ("PLUS_OP", "MINUS_OP", "INTRSCT_OP", "UNT_OP" ):
         popped_values = pop_first_element(number_line, tokens, lexemes)
         right_node = parse_multiplicative(number_line, tokens, lexemes, lines, result, Node, is_expression)
         node = Node(popped_values[0], [node[0], right_node[0]])
-        return node, lines
+        return node, line
     
-    return node[0], lines
+    return node[0], line
 
 # Multiply, Divide, and Modulo Operators
 def parse_multiplicative(number_line, tokens, lexemes, lines, result, Node, is_expression):
     node = parse_unary(number_line, tokens, lexemes, lines, result, Node, is_expression)
-    lines = node[1]
+    line = node[1]
 
     while tokens and tokens[0] in ("MULTIPLY_OP", "DIVIDE_OP", "MODULO_OP"):
         popped_values = pop_first_element(number_line, tokens, lexemes)
         right_node = parse_unary(number_line, tokens, lexemes, lines, result, Node, is_expression)
         node = Node(popped_values[0], [node[0], right_node[0]])
-        return node, lines
-    
-    return node[0], lines
+        return node, line
+
+    return node[0], line
 
 # Increment, Decrement, Logical Not, and Bitwise Not Operators
 def parse_unary(number_line, tokens, lexemes, lines, result, Node, is_expression):
     node = parse_factor(number_line, tokens, lexemes, lines, result, Node, is_expression)
-    lines = node[1]
+    line = node[1]
 
     while tokens and tokens[0] in ("INCR_OP", "DECR_OP", "LOGNOT_OP", "BTWNOT_OP"):
         popped_values = pop_first_element(number_line, tokens, lexemes)
         right_node = parse_factor(number_line, tokens, lexemes, lines, result, Node, is_expression)
         node = Node(popped_values[0], [node[0], right_node[0]])
-        return node, lines
+        return node, line
     
-    return node[0], lines
+    return node[0], line
 
 # Handle integer and float constants, identifiers, and parenthesis
 def parse_factor(number_line, tokens, lexemes, lines, result, Node, is_expression):
     if tokens[0] in ("INT_CONST", "FLOAT_CONST", "IDENTIFIER"):
         popped_values = pop_first_element(number_line, tokens, lexemes)
         node = Node(popped_values[0], [popped_values[2]])
-        return node, popped_values[1]
+        return node, lines.append(popped_values[1])
     
     elif tokens[0] == "LPAREN":
         popped_values = pop_first_element(number_line, tokens, lexemes)
@@ -350,13 +351,13 @@ def parse_break(number_line, tokens, lexemes, lines, result, Node):
     if tokens and tokens[0] == "SEMICOLON":
         node = Node("Break", [popped_break[2]])
         pop_first_element(number_line, tokens, lexemes)
-        return node, popped_break[1], result
+        return node, lines.append(popped_break[1]), result
 
     # Error if missing semicolon
     else:
         node = Node("Break", [Node("Error", [])])
         error_missing_semicolon(lines, popped_break[1], result, "break")
-        return node, popped_break[1], result
+        return node, lines.append(popped_break[1]), result
 
 # Continue Statement
 def parse_continue(number_line, tokens, lexemes, lines, result, Node):
@@ -366,13 +367,13 @@ def parse_continue(number_line, tokens, lexemes, lines, result, Node):
     if tokens and tokens[0] == "SEMICOLON":
         node = Node("Continue", [popped_continue[2]])
         pop_first_element(number_line, tokens, lexemes)
-        return node, popped_continue[1], result
+        return node, lines.append(popped_continue[1]), result
 
     #Check if missing semicolon
     else:
         node = Node("Continue", [Node("Error", [])])
         error_missing_semicolon(lines, popped_continue[1], result, "continue")
-        return node, popped_continue[1], result
+        return node, lines.append(popped_continue[1]), result
 
 # Return Statement
 def parse_return(number_line, tokens, lexemes, lines, result, Node):
@@ -382,13 +383,13 @@ def parse_return(number_line, tokens, lexemes, lines, result, Node):
     if tokens and tokens[0] == "SEMICOLON":
         node = Node("Return", [popped_return[2]])
         pop_first_element(number_line, tokens, lexemes)
-        return node, popped_return[1], result
+        return node, lines.append(popped_return[1]), result
 
     #Check if missing semicolon
     else:
         node = Node("Return", [Node("Error", [])])
         error_missing_semicolon(lines, popped_return[1], result, "return")
-        return node, popped_return[1], result
+        return node, lines.append(popped_return[1]), result
 
 # GoTo Statement
 def parse_goto(number_line, tokens, lexemes, lines, result, Node):
@@ -403,19 +404,19 @@ def parse_goto(number_line, tokens, lexemes, lines, result, Node):
         if tokens and tokens[0] == "SEMICOLON":
             node = Node("Go-To", [identifier])
             pop_first_element(number_line, tokens, lexemes)
-            return node, popped_identifier[1], result
+            return node, lines.append(popped_identifier[1]), result
 
         #Check if missing semicolon
         else:
             node = Node("GoTo", [identifier, Node("Error", [])])
             error_missing_semicolon(lines, popped_identifier[1], result, "identifier")
-            return node, popped_identifier[1], result
+            return node, lines.append(popped_identifier[1]), result
     
     # Error if missing identifier
     else:
         node = Node("GoTo", [Node("Error", [])])
         error_expected_after(lines, popped_goto[1], result, "identifier", "goto")
-        return node, popped_goto[1], result
+        return node, lines.append(popped_goto[1]), result
 
 # Do-While, While, If, Else-If Condition
 def condition(number_line, tokens, lexemes, lines, result, Node):
@@ -437,25 +438,25 @@ def condition(number_line, tokens, lexemes, lines, result, Node):
             if tokens and tokens[0] == "RPAREN":
                 popped_rparen = pop_first_element(number_line, tokens, lexemes)
                 node = Node("Condition", [condition[0]])
-                return node, popped_rparen[1], result
+                return node, lines.append(popped_rparen[1]), result
 
             # Error if while condition not closed
             else:
                 node = Node(popped_keyword[2].capitalize(), [condition[0], Node("Error", [])])
                 error_expected_after(lines, popped_lparen[1], result, "')'", " condition")
-                return node, condition[1], result
+                return node, lines.append(condition[1]), result
               
         # Error if missing condition
         else:
             node = Node(popped_keyword[2].capitalize(), [Node("Error", [])])
             error_expected_after(lines, popped_lparen[1], result, " condition", "'('")
-            return node, popped_lparen[1], result
+            return node, lines.append(popped_lparen[1]), result
 
     # Error if no left parenthesis after while keyword
     else:
         node = Node(popped_keyword[2].capitalize(), [Node("Error", [])])
         error_expected_after(lines, popped_keyword[1], result, "'('", " keyword")
-        return node, popped_keyword[1], result
+        return node, lines.append(popped_keyword[1]), result
 
 # Do-While Loop
 def do_while_loop(number_line, tokens, lexemes, lines, result, Node):
@@ -513,13 +514,13 @@ def while_loop(number_line, tokens, lexemes, lines, result, Node):
     # Check if condition is followed by left brace
     if tokens and tokens[0] == "LBRACE":
         node = while_condition[0]
-        return node, while_condition[1], result, True        
+        return node, lines.append(while_condition[1]), result, True        
         
     # Error if condition is empty
     else:
         node = Node(while_condition[0].value, [Node("Error", [])])
         error_expected_after(lines, while_condition[1], result, "'{'", "declaration")
-        return node, while_condition[1], result
+        return node, lines.append(while_condition[1]), result
 
 def for_update(number_line, tokens, lexemes, lines, result, Node):
     update_assignment = {"ADDASGN_OP", "SUBASGN_OP", "MULTASGN_OP", "DIVASGN_OP", "MODASGN_OP"}
@@ -533,14 +534,14 @@ def for_update(number_line, tokens, lexemes, lines, result, Node):
             node_increment = Node(popped_increment[0], [popped_increment[2]])
 
             node = Node("Update", [node_token, node_increment])
-            return node, popped_increment[1], result
+            return node, lines.append(popped_increment[1]), result
         else:
             assignment = parse_assignment(number_line, tokens, lexemes, lines, result, Node)
 
             if assignment[0] != None:
                 if assignment[0].value in update_assignment:
                     node = Node("Update", [assignment[0]])
-                    return node, assignment[1], result
+                    return node, lines.append(assignment[1]), result
 
                 else:
                     node = None
@@ -562,7 +563,7 @@ def for_condition(number_line, tokens, lexemes, lines, result, Node):
         if tokens and (tokens[0] == "SEMICOLON"):
             popped_semicolon = pop_first_element(number_line, tokens, lexemes)
             node = Node("Condition", [condition])
-            return node, popped_semicolon[1], result
+            return node, lines.append(popped_semicolon[1]), result
 
         else:
             node = None
@@ -579,7 +580,7 @@ def for_initialization(number_line, tokens, lexemes, lines, result, Node):
         
         if initialization[0] != None:
             node = Node("Initialization", [initialization[0]])
-            return node, initialization[1], result
+            return node, lines.append(initialization[1]), result
         
         else:
             node = None
@@ -596,7 +597,7 @@ def for_initialization(number_line, tokens, lexemes, lines, result, Node):
             if tokens[0] == "SEMICOLON":
                 popped_semicolon = pop_first_element(number_line, tokens, lexemes)
                 node = Node("Initialization", [initialization[0]])
-                return node, popped_semicolon[1], result
+                return node, lines.append(popped_semicolon[1]), result
 
             else:
                 node = None
@@ -624,7 +625,7 @@ def for_loopcontrol(number_line, tokens, lexemes, lines, result, Node):
 
                     if update[0] != None:
                         node = Node("Loop Control", [initialization[0], condition[0], update[0]])
-                        return node, update[1], result
+                        return node, lines.append(update[1]), result
 
                     else:
                         node = None
@@ -667,7 +668,7 @@ def for_loop(number_line, tokens, lexemes, lines, result, Node):
 
                             if statements[0] != None:    
                                 node = Node("ForLoop", [loop_control[0], statements[0]])
-                                return node, statements[1], result
+                                return node, lines.append(statements[1]), result
                             
                             else:
                                 node = None
@@ -714,7 +715,7 @@ def if_statement(number_line, tokens, lexemes, lines, result, Node):
                     
                     if else_elseif[0] != None:
                         node = Node("If-Else", [else_elseif[0]])
-                        return node, statements[1], result
+                        return node, lines.append(statements[1]), result
                     
                     else:
                         node = None
@@ -771,14 +772,14 @@ def else_statement(number_line, tokens, lexemes, lines, result, Node):
         node = None
         error_expected_after(lines, popped_else[1], result, "if or '{'", "else")
         return node, lines, result
-    
-assignment_operators = {
-    "ASGN_OP", "ADDASGN_OP", "SUBASGN_OP", "MULTASGN_OP", "DIVASGN_OP", "MODASGN_OP", "BTWANDASGN_OP", 
-    "BTWORASGN_OP", "BTWXORASGN_OP", "RSHIFTASGN_OP", "LSHIFTASGN_OP", "INTRSCT_OP", "UNT_OP",
-    "INSRT_OP", "RMV_OP", "RCSVDQ_OP", "PRTYEQ_OP"}
 
 # Assignment, Addition, Subtraction, Multiplication, Division, Modulo, Bitwise (AND, OR, XOR), Right and Left Shift Assignment
 def parse_assignment(number_line, tokens, lexemes, lines, result, Node):
+    assignment_operators = [
+        "ASGN_OP", "ADDASGN_OP", "SUBASGN_OP", "MULTASGN_OP", "DIVASGN_OP", "MODASGN_OP", "BTWANDASGN_OP", 
+        "BTWORASGN_OP", "BTWXORASGN_OP", "RSHIFTASGN_OP", "LSHIFTASGN_OP", "INTRSCT_OP", "UNT_OP",
+        "INSRT_OP", "RMV_OP", "RCSVDQ_OP", "PRTYEQ_OP"]
+    
     # Stores identifier token[0] and number line[1] to popped_identifier
     popped_identifier = pop_first_element(number_line, tokens, lexemes)
     identifier = Node("Identifier", [popped_identifier[2]])
@@ -791,18 +792,18 @@ def parse_assignment(number_line, tokens, lexemes, lines, result, Node):
         if tokens and tokens[0] in ("INT_CONST", "FLOAT_CONST", "IDENTIFIER"):
                 expression = parse_expression(number_line, tokens, lexemes, lines, result, Node)
                 node = Node("Assignment", [identifier, operator, expression[0]])
-                return node, popped_operator[1], result
+                return node, lines.append(popped_operator[1]), result
 
         else:
             node = Node("Assignment", [identifier, operator, Node("Error", [])])
             error_missing(lines, popped_operator[1], result, "assignment right hand side")
-            return node, popped_operator[1], result
+            return node, lines.append(popped_operator[1]), result
     
     # Error if identifier is not followed by an assignment operator
     else:
         node = Node("Assignment", [identifier, Node("Error", [])])
         error_expected_after(lines, popped_identifier[1], result, "an assignment operator", "identifier")
-        return node, popped_identifier[1], result
+        return node, lines.append(popped_identifier[1]), result
 
 def parse_assignment_statement(number_line, tokens, lexemes, lines, result, Node):
     assignment = parse_assignment(number_line, tokens, lexemes, lines, result, Node)
@@ -864,23 +865,23 @@ def parse_declaration(number_line, tokens, lexemes, lines, result, Node):
         elif tokens and tokens[0] == "SEMICOLON":
             node = Node("Declaration", [identifier])
             popped_semicolon = pop_first_element(number_line, tokens, lexemes)
-            return node, popped_semicolon[1], result
+            return node, lines.append(popped_semicolon[1]), result
         
         else:
             if tokens:
                 node = Node("Declaration", [identifier[0], Node("Error", [])])
                 error_expected_after(lines, popped_identifier[1], result, "Assignment Operators, [, ;", "Identifier in declaration")
-                return node, popped_identifier[1], result
+                return node, lines.append(popped_identifier[1]), result
             else:   
                 node = Node("Declaration", [identifier[0], Node("Error", [])])
                 error_expected_after(lines, popped_identifier[1], result, "Assignment Operators, [, ;", "Identifier in declaration")
-                return node, popped_identifier[1], result
+                return node, lines.append(popped_identifier[1]), result
 
     # Error if data type is not followed by an identifier
     else:
         node = Node("Declaration", [Node("Error", [])])
         error_expected_after(lines, popped_declaration[1], result, "Identifier", "Declaration")
-        return node, popped_declaration[1], result
+        return node, lines.append(popped_declaration[1]), result
         
 def parse_function(datatype, identifier, number_line, tokens, lexemes, lines, result, Node):
     if tokens and tokens[0] == "LPAREN":
@@ -891,7 +892,7 @@ def parse_function(datatype, identifier, number_line, tokens, lexemes, lines, re
             if tokens and tokens[0] == "SEMICOLON":
                 popped_semicolon = pop_first_element(number_line, tokens, lexemes)
                 node = Node("Function", [datatype, identifier, parameters])
-                return node, popped_semicolon[1], result
+                return node, lines.append(popped_semicolon[1]), result
             elif tokens and tokens[0] == "LBRACE":
                 function_body, lines, result = parse_statements(number_line, tokens, lexemes, lines, result, Node)
                 node = Node("Function", [datatype, identifier, parameters, function_body])
@@ -910,7 +911,7 @@ def parse_function(datatype, identifier, number_line, tokens, lexemes, lines, re
             #error in function declarators when error in parameters
             node = Node("FunctionDeclaration", [Node("Error", [])])
             error_expected_after(lines, popped_lparen[1], result, "Parameters", "FunctionDeclaration")
-            return node, popped_lparen[1], result
+            return node, lines.append(popped_lparen[1]), result
     
     
 
@@ -931,28 +932,28 @@ def parse_parameters(lparen, number_line, tokens, lexemes, lines, result, Node):
             else:
                 node = Node("DataType", Node[("Error", [])])
                 error_expected_after(lines, popped_datatype[1], result, "Identifier", "DataType")
-                return node, popped_datatype[1], result      
+                return node, lines.append(popped_datatype[1]), result      
         else:
             #error in data type
             pop_first_element(number_line, tokens, lexemes)
             node = Node("DataType", Node[("Error", [])])
             error_expected_after(lines, lparen[1], result, "DataType", "(")
-            return node, lparen[1], result    
+            return node, lines.append(lparen[1]), result    
 
     if tokens and tokens[0] == "RPAREN":
         if parameters:
             popped_rparen = pop_first_element(number_line, tokens, lexemes)
             node = [Node("Parameters", [id]) for id in parameters]
-            return node, popped_rparen[1], result
+            return node, lines.append(popped_rparen[1]), result
         else:
             node = Node("Parameterless", [])
             popped_rparen = pop_first_element(number_line, tokens, lexemes)
-            return node, popped_rparen[1], result
+            return node, lines.append(popped_rparen[1]), result
     else:
         #error in parameters, no )
         node = Node("Parameters", [Node("Error", [])])
         error_expected_after(lines, lparen[1], result, ")", "parameters")
-        return node, popped_identifier[1], result
+        return node, lines.append(popped_identifier[1]), result
         
 
 def parse_multidec(popped_identifier, number_line, tokens, lexemes, lines, result, Node):
@@ -980,18 +981,18 @@ def parse_multidec(popped_identifier, number_line, tokens, lexemes, lines, resul
             end = pop_first_element(number_line, tokens, lexemes)
             # Include the current identifiers and their assignments in the Node
             node = [Node("DecNodes", [id]) for id in nodes]
-            return node, end[1], result
+            return node, lines.append(end[1]), result
         
         else:
             #error in declaration, no semicolon
             node = Node("Declaration", [Node("Error", [])])
             error_missing_semicolon(lines, popped_identifier[1], result, "Declaration")
-            return node, popped_identifier[1], result
+            return node, lines.append(popped_identifier[1]), result
     else:
         #error in identifier, no comma
         node = Node("Identifier", [Node("Error", [])])
         error_expected_after(lines, popped_identifier[1], result, "Identifier", ",")
-        return node, popped_identifier[1], result
+        return node, lines.append(popped_identifier[1]), result
 
 def declaration_assignment(popped_identifier, number_line, tokens, lexemes, lines, result, Node):
     assignments = []
@@ -1023,13 +1024,13 @@ def declaration_assignment(popped_identifier, number_line, tokens, lexemes, line
     if tokens and tokens[0] == "SEMICOLON":
         node = [Node("Assignment", [id]) for id in assignments]
         end = pop_first_element(number_line, tokens, lexemes)
-        return node, end[1], result
+        return node, lines.append(end[1]), result
 
     # Error if assignment is missing semicolon
     else:
         node = Node("Assignment", [Node("Error", [])])
         error_missing_semicolon(lines, popped_operator[1], result, ";", "Assignment")
-        return node, popped_operator[1], result
+        return node, lines.append(popped_operator[1]), result
 
 def parse_array(poppedidentifier, number_line, tokens, lexemes, lines, result, Node):
     identifier = poppedidentifier
@@ -1041,18 +1042,18 @@ def parse_array(poppedidentifier, number_line, tokens, lexemes, lines, result, N
         else: 
             node = Node("Error", [Node("expression", [])])
             error_expected_after(lines, lbracket[1], result, "expression", "ArrayExpression")
-            return node, lbracket[1], result
+            return node, lines.append(lbracket[1]), result
             
         if tokens and tokens[0] == "RBRACKET":
             rbracket = pop_first_element(number_line, tokens, lexemes)
             node = Node("Array", [identifier, lbracket, expression, rbracket])
-            return node, rbracket[1], result
+            return node, lines.append(rbracket[1]), result
         
         #Error in array expression.
         else:
             node = Node("ArrayExpression", [Node("Error", [])])
             error_expected_after(lines, lbracket[1], result, "]", "ArrayExpression")
-            return node, lbracket[1], result
+            return node, lines.append(lbracket[1]), result
     
 def parse_dscodeop(popped_identifier, number_line, tokens, lexemes, lines, result, Node):
     nodes = []
@@ -1068,7 +1069,7 @@ def parse_dscodeop(popped_identifier, number_line, tokens, lexemes, lines, resul
                 if tokens and tokens[0] == "SEMICOLON":
                     end = pop_first_element(number_line, tokens, lexemes)
                     node = [Node("DSNodes", [id]) for id in nodes]
-                    return node, end[1], result
+                    return node, lines.append(end[1]), result
                 
                 elif tokens and tokens[0] == "INSRT_OP" or tokens and tokens[0] == "PRTYEQ_OP":
                     continue
@@ -1080,13 +1081,13 @@ def parse_dscodeop(popped_identifier, number_line, tokens, lexemes, lines, resul
             else:
                 node = Node("Declaration", [Node("Error", [])])
                 error_missing_semicolon(lines, popped_identifier[1], result, "Declaration")
-                return node, popped_identifier[1], result
+                return node, lines.append(popped_identifier[1]), result
         
         #Error in insert operation.
         else:
             node = Node("InsertOperation", [Node("Error", [])])
             error_expected_after(lines, popped_identifier[1], result, "ManyOthers", "InsertOperation")
-            return node, popped_identifier[1], result
+            return node, lines.append(popped_identifier[1]), result
 
 def parse_otherkeywords(number_line, tokens, lexemes, lines, result, Node):
     if lexemes[0] == "print":
@@ -1114,25 +1115,25 @@ def parse_const(number_line, tokens, lexemes, lines, result, Node):
             if tokens and tokens[0] == "SEMICOLON":
                 node = Node("Const", [datatype, identifier])
                 popped_semicolon = pop_first_element(number_line, tokens, lexemes)
-                return node, popped_semicolon[1], result
+                return node, lines.append(popped_semicolon[1]), result
             
             # Error if missing semicolon
             else:
                 node = Node("Const", [datatype, identifier, Node("Error", [])])
                 error_missing_semicolon(lines, popped_identifier[1], result, "const")
-                return node, popped_identifier[1], result
+                return node, lines.append(popped_identifier[1]), result
             
         # Error if missing identifier
         else:
             node = Node("Const", [datatype, Node("Error", [])])
             error_expected_after(lines, popped_datatype[1], result, "Identifier", "Data Type")
-            return node, popped_datatype[1], result
+            return node, lines.append(popped_datatype[1]), result
 
     # Error if const is not followed by a datatype 
     else:
         node = Node("Const", [Node("Error", [])])
         error_expected_after(lines, popped_const[1], result, "Data Type", "Const")
-        return node, popped_const[1], result
+        return node, lines.append(popped_const[1]), result
     
 #Input Keyword
 def parse_input(number_line, tokens, lexemes, lines, result, Node):
@@ -1156,35 +1157,35 @@ def parse_input(number_line, tokens, lexemes, lines, result, Node):
                     if tokens and tokens[0] == "SEMICOLON":
                         node = Node("Input", [argument[0]])
                         popped_semicolon = pop_first_element(number_line, tokens, lexemes)
-                        return node, popped_semicolon[1], result
+                        return node, lines.append(popped_semicolon[1]), result
                     
                     # Error for missing semicolon
                     else:
                         node = Node("Input", [argument[0], Node("Error", [])])
                         error_missing_semicolon(lines, popped_rparen[1], result, "')'")
-                        return node, popped_rparen[1], result
+                        return node, lines.append(popped_rparen[1]), result
                 
                 # Error for missing right parenthesis
                 else:
                     node = Node("Input", [argument[0], Node("Error", [])])
                     error_expected_after(lines, popped_lparen[1], result, "')'", "input argument")
-                    return node, popped_lparen[1], result
+                    return node, lines.append(popped_lparen[1]), result
             
             # Error for missing input argument
             else:
                 node = argument[0]
                 error_expected_after(lines, argument[1], result, "identifier", "'('")
-                return node, argument[1], result
+                return node, lines.append(argument[1]), result
         else:
             node = Node("Input", [Node("Error", [])])
             error_expected_after(lines, popped_lparen[1], result, "identifier", "'('")
-            return node, popped_lparen[1], result    
+            return node, lines.append(popped_lparen[1]), result    
 
     # Error for inavlid syntax   
     else:
         node = Node("Input", [Node("Error", [])])
         error_expected_after(lines, popped_input[1], result, "'('", "input keyword")
-        return node, popped_input[1], result
+        return node, lines.append(popped_input[1]), result
     
 def input_argument(number_line, tokens, lexemes, lines, result, Node):
     arguments = []
@@ -1200,7 +1201,7 @@ def input_argument(number_line, tokens, lexemes, lines, result, Node):
             
             node = [Node("Arguments", [id]) for id in arguments]
             error_expected_after(lines, argument_content[1], result, "identifier", "input argument")
-            return node, argument_content[1], result
+            return node, lines.append(argument_content[1]), result
     
         arguments.append(argument_content[0])
         # Check for comma for multiple arguments
@@ -1214,17 +1215,17 @@ def input_argument(number_line, tokens, lexemes, lines, result, Node):
             
             node = [Node("Arguments", [id]) for id in arguments]
             error_expected_after(lines, argument_content[1], result, "',' or ')'", argument_content[2])
-            return node, argument_content[1], result
+            return node, lines.append(argument_content[1]), result
         
     if tokens:
         if tokens and tokens[0] == "RPAREN":
             node = [Node("Arguments", [id]) for id in arguments]
-            return node, argument_content[1], result
+            return node, lines.append(argument_content[1]), result
     else:
         
         node = [Node("Arguments", [id]) for id in arguments]
         error_expected_after(lines, argument_content[1], result, "identifier", "'" + argument_content[2] + "'")
-        return node, argument_content[1], result 
+        return node, lines.append(argument_content[1]), result 
 
 
 # Print Keyword
@@ -1249,24 +1250,24 @@ def parse_print(number_line, tokens, lexemes, lines, result, Node):
                     if tokens and tokens[0] == "SEMICOLON":
                         node = Node("Print", [argument[0]])
                         popped_semicolon = pop_first_element(number_line, tokens, lexemes)
-                        return node, popped_semicolon[1], result
+                        return node, lines.append(popped_semicolon[1]), result
                     
                     # Error for missing semicolon
                     else:
                         node = Node("Print", [argument[0], Node("Error", [])])
                         error_missing_semicolon(lines, popped_rparen[1], result, "')'")
-                        return node, popped_rparen[1], result
+                        return node, lines.append(popped_rparen[1]), result
                 
                 # Error for missing right parenthesis
                 else:
                     node = Node("Print", [argument[0], Node("Error", [])])
                     error_expected_after(lines, popped_lparen[1], result, "')'", "print argument")
-                    return node, popped_lparen[1], result
+                    return node, lines.append(popped_lparen[1]), result
             
             # Error for missing print argument
             else:
                 node = argument[0]
-                return node, argument[1], result
+                return node, lines.append(argument[1]), result
         else:
             node = Node("Print", [Node("Error", [])])
             error_expected_after(lines, popped_lparen[1], result, "string literal or identifier", "'('")
@@ -1296,7 +1297,7 @@ def print_argument(number_line, tokens, lexemes, lines, result, Node):
             arguments.append(Node("Error", [argument_content[0]]))
             node = [Node("Arguments", [id]) for id in arguments]
             error_expected_after(lines, argument_content[1], result, "string literal or identifier", "print argument")
-            return node, argument_content[1], result
+            return node, lines.append(argument_content[1]), result
     
         arguments.append(argument_content[0])
         # Check for comma between multiple arguments
@@ -1309,15 +1310,15 @@ def print_argument(number_line, tokens, lexemes, lines, result, Node):
         else:
             node = [Node("Arguments", [id]) for id in arguments]
             error_expected_after(lines, argument_content[1], result, "',' or ')'", argument_content[2])
-            return node, argument_content[1], result
+            return node, lines.append(argument_content[1]), result
         
     if tokens:
         # Check if the right parenthesis is present, indicating the end of arguments
         if tokens and tokens[0] == "RPAREN":
             node = [Node("Arguments", [id]) for id in arguments]
-            return node, argument_content[1], result
+            return node, lines.append(argument_content[1]), result
     else:
         # Error if there are no tokens left and the function unexpectedly ends
         node = [Node("Arguments", [id]) for id in arguments]
         error_expected_after(lines, argument_content[1], result, "string literal or identifier", "'" + argument_content[2] + "'")
-        return node, argument_content[1], result 
+        return node, lines.append(argument_content[1]), result 
