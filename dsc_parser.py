@@ -293,6 +293,7 @@ def parse_factor(number_line, tokens, lexemes, lines, result, Node, is_expressio
         node = Node(popped_values[0], [popped_values[2]])
         return node, lines.append(popped_values[1])
     
+    #check if it is followed by lparen
     elif tokens[0] == "LPAREN":
         popped_values = pop_first_element(number_line, tokens, lexemes)
 
@@ -301,19 +302,21 @@ def parse_factor(number_line, tokens, lexemes, lines, result, Node, is_expressio
         else:
             bool_expression = parse_boolexpression(number_line, tokens, lexemes, lines, result, Node)
 
+        #check if it is followed by rparen
         if tokens and tokens[0] == "RPAREN":
             pop_first_element(number_line, tokens, lexemes)
             expression if is_expression else bool_expression
 
+        #error in expression and parenthesis
         else:
-            node = None
+            node = Node("Error", [])
             error_expected_after(lines, popped_values[1], result, "')'", "'(' in expression")
-            return node, lines, result
+            return node, lines.append(popped_values[1]), result
     
     else:
-        node = None
+        node = Node("Error", [])
         error_unexpected_tokens(lines, number_line[0], result, tokens[0])
-        return node, lines, result, tokens[0]
+        return node, lines.append(number_line[0]), result, tokens[0]
 
 def parse_controlflow(number_line, tokens, lexemes, lines, result, Node):
     if lexemes[0] == "break":
@@ -687,38 +690,27 @@ def for_loop(number_line, tokens, lexemes, lines, result, Node):
 def if_statement(number_line, tokens, lexemes, lines, result, Node):
     if_condition = condition(number_line, tokens, lexemes, lines, result, Node)
 
-    if if_condition[0] != None:
-        if tokens and tokens[0] == "LBRACE":
-            statements = parse_statements(number_line, tokens, lexemes, lines, result, Node)
+    #check if it is followed by lbrace
+    if tokens and tokens[0] == "LBRACE":
+        statements = parse_statements(number_line, tokens, lexemes, lines, result, Node)
 
-            if statements[0] != None:
-                if tokens and lexemes[0] == "else":
-                    else_elseif = else_statement(number_line, tokens, lexemes, lines, result, Node)
-                    
-                    if else_elseif[0] != None:
-                        node = Node("If-Else", [else_elseif[0]])
-                        return node, lines.append(statements[1]), result
-                    
-                    else:
-                        node = None
-                        return node, lines, result
+        #if it is followed by else
+        if tokens and lexemes[0] == "else":
+            else_elseif = else_statement(number_line, tokens, lexemes, lines, result, Node)
+            #if followed by if elsw
+            node = Node("If-Else", [else_elseif[0]])
+            return node, lines.append(statements[1]), result
 
-                else:
-                    node = Node("If", [if_condition[0], statements[0]])
-                    return node, lines, result
-                        
-            else:
-                node = None
-                return node, lines, result
-
+        #if if_statement only
         else:
-            node = None
-            error_expected_after(lines, if_condition[1], result, "'{'", "declaration")
+            node = Node("If", [if_condition[0], statements[0]])
             return node, lines, result
-
+                    
+    #invalid if there's no declaration and lbrace
     else:
-        node = None
-        return node, lines, result
+        node = Node("Declaration", Node() )
+        error_expected_after(lines, if_condition[1], result, "'{'", "Declaration")
+        return node, lines.append(if_condition[1]), result
 
 # Else Statement
 def else_statement(number_line, tokens, lexemes, lines, result, Node):
