@@ -1,3 +1,4 @@
+from prsr_otherfunctions import pop_first_element
 from dsc_lexer import lexical_analyzer
 from dsc_parser import syntax_analyzer
 
@@ -258,7 +259,7 @@ class GUI:
 
         self.number_line_right.config(state = "disabled")
 
-        self.parser_lines, self.parser_result = syntax_analyzer(self.number_line, self.tokens, self.lexemes)
+        self.parser_lines, self.parser_result, self.parser_node = syntax_analyzer(self.number_line, self.tokens, self.lexemes)
 
         #Update syntax errors text widget
         self.syntax_errors.config(state = "normal")
@@ -266,6 +267,9 @@ class GUI:
 
         for item1, item2 in zip(self.parser_lines, self.parser_result):
             self.syntax_errors.insert(END, f"Error in Line {item1}:\t{item2}\n")
+
+        for item3 in self.parser_node:
+            self.syntax_errors.insert(END, f"{item3}")
 
         self.syntax_errors.config(state = "disabled")
 
