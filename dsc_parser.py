@@ -466,46 +466,33 @@ def do_while_loop(number_line, tokens, lexemes, lines, result, Node):
     if tokens:
         statements = parse_statements(number_line, tokens, lexemes, lines, result, Node)
 
-        # Check do keyword is followed by statements
-        if statements[0] != None:
+        # If statements is followed by the while keyword
+        if tokens and lexemes[0] == "while":
+            while_condition = condition(number_line, tokens, lexemes, lines, result, Node)
 
-            # If statements is followed by the while keyword
-            if tokens and lexemes[0] == "while":
-                while_condition = condition(number_line, tokens, lexemes, lines, result, Node)
-
-                if while_condition[0] != None:
-
-                    # If identifier is followed by a semicolon
-                    if tokens and tokens[0] == "SEMICOLON":
-                        node = Node("Do-WhileLoop", [Node("Do", [statements[0]]), while_condition[0]])
-                        pop_first_element(number_line, tokens, lexemes)
-                        return node, lines, result
-                            
-                    # Error if declaration is missing semicolon
-                    else:
-                        node = None
-                        error_missing_semicolon(lines, while_condition[1], result, "do-while loop")
-                        return node, lines, result
-                    
-                else:
-                    node = None
-                    return node, lines, result
-            
-            # Error if not followed by a while condition
-            else:
-                node = None
-                error_expected_after(lines, statements[1], result, "while", "'}' in the statement")
+            # If identifier is followed by a semicolon
+            if tokens and tokens[0] == "SEMICOLON":
+                node = Node("Do-WhileLoop", [Node("Do", [statements[0]]), while_condition[0]])
+                pop_first_element(number_line, tokens, lexemes)
                 return node, lines, result
-            
+                    
+            # Error if declaration is missing semicolon
+            else:
+                node = Node(popped_do[2].capitalize(), [statements[0], while_condition, Node("Error", [])])
+                error_missing_semicolon(lines, while_condition[1], result, "do-while loop")
+                return node, lines.append(while_condition[1]), result
+                
+        # Error if not followed by a while condition
         else:
-            node = None
-            return node, lines, result
+            node = Node(popped_do[2].capitalize(), [statements[0], Node("Error", [])] )
+            error_expected_after(lines, statements[1], result, "while", "'}' in the statement")
+            return node, lines.append(statements[1]), result
         
     # Error if invalid syntax for do-while loop
     else:
-        node = None
+        node = Node(popped_do[2].capitalize(), [Node("Error", [])])
         error_expected_after(lines, popped_do[1], result, "{", "do keyword")
-        return node, lines, result
+        return node, lines.append(popped_do[1]), result
 
 # While and Do-While Loop
 def while_loop(number_line, tokens, lexemes, lines, result, Node):
@@ -522,11 +509,15 @@ def while_loop(number_line, tokens, lexemes, lines, result, Node):
         error_expected_after(lines, while_condition[1], result, "'{'", "declaration")
         return node, lines.append(while_condition[1]), result
 
+# For Update
 def for_update(number_line, tokens, lexemes, lines, result, Node):
     update_assignment = {"ADDASGN_OP", "SUBASGN_OP", "MULTASGN_OP", "DIVASGN_OP", "MODASGN_OP"}
     update_increment = {"INCR_OP", "DECR_OP"}
     
+    # Check if next token is an identifier
     if tokens[0] == "IDENTIFIER":
+
+        # Check if token is in update_increment
         if tokens[1] in update_increment:
             popped_token = pop_first_element(number_line, tokens, lexemes)
             popped_increment = pop_first_element(number_line, tokens, lexemes)
@@ -535,82 +526,73 @@ def for_update(number_line, tokens, lexemes, lines, result, Node):
 
             node = Node("Update", [node_token, node_increment])
             return node, lines.append(popped_increment[1]), result
+        
+        # Check if token is followed by assignment
         else:
             assignment = parse_assignment(number_line, tokens, lexemes, lines, result, Node)
 
-            if assignment[0] != None:
-                if assignment[0].value in update_assignment:
-                    node = Node("Update", [assignment[0]])
-                    return node, lines.append(assignment[1]), result
+            # If assignment is in update_assignment
+            if assignment[0].value in update_assignment:
+                node = Node("Update", [assignment[0]])
+                return node, lines.append(assignment[1]), result
 
-                else:
-                    node = None
-                    error_invalid_syntax(lines, lines[-1], result, "update")
-                    return node, lines, result
+            # Error if not in either update_assignment or update_increment
             else:
-                node = None
+                node = Node("Update", [assignment[0], Node("Error", [])])
+                error_invalid_syntax(lines, lines[-1], result, "update")
                 return node, lines, result
 
+    # Error if not an identifier
     else:
-        node = None
-        error_invalid_syntax(lines, lines[-1], result, "update")
+        node = Node("Update", [Node("Error", [])])
+        error_expected_after(lines, lines[-1], result, "identifier", "';'")
         return node, lines, result
 
+# For Condition
 def for_condition(number_line, tokens, lexemes, lines, result, Node):
     condition = parse_boolexpression(number_line, tokens, lexemes, lines, result, Node)
 
-    if condition != None:
-        if tokens and (tokens[0] == "SEMICOLON"):
-            popped_semicolon = pop_first_element(number_line, tokens, lexemes)
-            node = Node("Condition", [condition])
-            return node, lines.append(popped_semicolon[1]), result
+    # Check if condition is followed by semicolon
+    if tokens and (tokens[0] == "SEMICOLON"):
+        popped_semicolon = pop_first_element(number_line, tokens, lexemes)
+        node = Node("Condition", [condition[0]])
+        return node, lines.append(popped_semicolon[1]), result
 
-        else:
-            node = None
-            error_missing_semicolon(lines, condition[1], result, "condition")
-            return node, lines, result
-        
+    # Error if missing semicolon
     else:
-        node = None
-        return node, lines, result
+        node = Node("Condition", [condition[0], Node("Error", [])])
+        error_missing_semicolon(lines, condition[1], result, "condition")
+        return node, lines.append(condition[1]), result
 
+# For Initialization
 def for_initialization(number_line, tokens, lexemes, lines, result, Node):
+    # Check if token is data type, go to declaration
     if tokens[0] == "DATATYPE_KW":
         initialization = parse_declaration(number_line, tokens, lexemes, lines, result, Node)
-        
-        if initialization[0] != None:
-            node = Node("Initialization", [initialization[0]])
-            return node, lines.append(initialization[1]), result
-        
-        else:
-            node = None
-            return node, lines, result
-        
+        node = Node("Initialization", [initialization[0]])
+        return node, lines.append(initialization[1]), result
+    
+    # Check if token is identifier or is followed by semicolon
     elif len(tokens) == 1 or tokens[1] == "SEMICOLON":
         popped_identifier = pop_first_element(number_line, tokens, lexemes)
-        initialization = Node(popped_identifier[0], [popped_identifier[2]]), popped_identifier[1], result
+        initialization = Node("Identifier", [popped_identifier[2]]), lines.append(popped_identifier[1]), result
+
+    # Token is an identifier, go to assignment
     else:
         initialization = parse_assignment(number_line, tokens, lexemes, lines, result, Node)
 
-    if initialization[0] != None:
-        if tokens:
-            if tokens[0] == "SEMICOLON":
-                popped_semicolon = pop_first_element(number_line, tokens, lexemes)
-                node = Node("Initialization", [initialization[0]])
-                return node, lines.append(popped_semicolon[1]), result
-
-            else:
-                node = None
-                error_missing_semicolon(lines, initialization[1], result, "initialization")
-                return node, lines, result
-        else:
-            node = None
-            error_expected_after(lines, initialization[1], result, "';'", "initialization")
-            return node, lines, result
-        
+    # Check if initialization ends in semicolon
+    if tokens and tokens[0] == "SEMICOLON":
+            popped_semicolon = pop_first_element(number_line, tokens, lexemes)
+            node = Node("Initialization", [initialization[0]])
+            return node, lines.append(popped_semicolon[1]), result
+    
+    # Error if semicolon missing
     else:
-        node = None
-        return node, lines, result
+        node = Node("Initialization", [initialization[0], Node("Error", [])])
+        error_expected_after(lines, initialization[1], result, "';'", "initialization")
+        return node, lines.append(initialization[1]), result
+        
 
 def for_loopcontrol(number_line, tokens, lexemes, lines, result, Node):
     initialization = for_initialization(number_line, tokens, lexemes, lines, result, Node)
@@ -737,41 +719,28 @@ def if_statement(number_line, tokens, lexemes, lines, result, Node):
     else:
         node = None
         return node, lines, result
-    
+
+# Else Statement
 def else_statement(number_line, tokens, lexemes, lines, result, Node):
     popped_else = pop_first_element(number_line, tokens, lexemes)
 
-    if tokens:
-        if lexemes[0] == "if":
-            statement = if_statement(number_line, tokens, lexemes, lines, result, Node)
-
-            if statement[0] != None:
-                node = Node("Else-If", [statement[0]])
-                return node, lines, result
-
-            else:
-                node = None
-                return node, lines, result
-
-        elif tokens[0] == "LBRACE":
-            statement = parse_statements(number_line, tokens, lexemes, lines, result, Node)
-
-            if statement[0] != None:
-                node = Node("Else", [statement[0]])
-                return node, lines, result
-
-            else:
-                node = None
-                return node, lines, result
-
-        else:
-            node = None
-            error_expected_after(lines, popped_else[1], result, "if or '{'", "else")
-            return node, lines, result
-    else:
-        node = None
-        error_expected_after(lines, popped_else[1], result, "if or '{'", "else")
+    # Check if else is followed by an if
+    if tokens and lexemes[0] == "if":
+        statement = if_statement(number_line, tokens, lexemes, lines, result, Node)
+        node = Node("Else-If", [statement[0]])
         return node, lines, result
+
+    # Check if else is followed by a left brace
+    elif tokens[0] == "LBRACE":
+        statement = parse_statements(number_line, tokens, lexemes, lines, result, Node)
+        node = Node("Else", [statement[0]])
+        return node, lines, result
+
+    # Invalid Else
+    else:
+        node = Node("Else", [Node("Error", [])])
+        error_expected_after(lines, popped_else[1], result, "if or '{'", "else")
+        return node, lines.append(popped_else[1]), result
 
 # Assignment, Addition, Subtraction, Multiplication, Division, Modulo, Bitwise (AND, OR, XOR), Right and Left Shift Assignment
 def parse_assignment(number_line, tokens, lexemes, lines, result, Node):
