@@ -50,7 +50,7 @@ def parse_statements(number_line, tokens, lexemes, lines, result, Node):
     while tokens:
         if "ERROR" in tokens[0]:
             popped_values = pop_first_element(number_line, tokens, lexemes)
-            node = None
+            node = Node("Statements",[Node("Error", [])])
             error_unexpected_tokens(lines, popped_values[1], result, "Error")
             return node, lines.append(popped_values[1]), result
 
@@ -66,7 +66,7 @@ def parse_statements(number_line, tokens, lexemes, lines, result, Node):
                 node = [Node("Statements", [id]) for id in statements]
                 return node, lines.append(popped_rbrace[1]), result
             else:
-                statement.append(Node("Error", []))
+                statements.append(Node("Error", []))
                 node = [Node("Statements", [id]) for id in statements]
                 error_expected_after(lines, popped_lbrace[1], result, "'}'", "'{' in expression")
                 return node, lines.append(popped_lbrace[1]), result
@@ -93,9 +93,13 @@ def parse_statements(number_line, tokens, lexemes, lines, result, Node):
 
         else:
             popped_values = pop_first_element(number_line, tokens, lexemes)
-            node = None
-            error_invalid_syntax(lines, popped_values[1], result, "EWAN")
+            node = Node("Statements", [popped_values[0], Node("Error", [])])
+            error_invalid_syntax(lines, popped_values[1], result, "Statement")
             return node, lines.append(popped_values[1]), result
+    
+    node = Node("Statements",[Node("Error", [])])
+    #error_missing(lines, lines[-1], result, "'}'")
+    return node, lines, result
 
 """
 E X P R E S S I O N S   H A N D L I N G
@@ -600,117 +604,96 @@ def for_initialization(number_line, tokens, lexemes, lines, result, Node):
 def for_loopcontrol(number_line, tokens, lexemes, lines, result, Node):
     initialization = for_initialization(number_line, tokens, lexemes, lines, result, Node)
 
-    if initialization[0] != None:
+    # CHeck if token is not empty
+    if tokens:
+        condition = for_condition(number_line, tokens, lexemes, lines, result, Node)
+
+        # CHeck if token is not empty
         if tokens:
-            condition = for_condition(number_line, tokens, lexemes, lines, result, Node)
+            update = for_update(number_line, tokens, lexemes, lines, result, Node)
+            node = Node("Loop Control", [initialization[0], condition[0], update[0]])
+            return node, lines.append(update[1]), result
 
-            if condition[0] != None:
-                if tokens:
-                    update = for_update(number_line, tokens, lexemes, lines, result, Node)
-
-                    if update[0] != None:
-                        node = Node("Loop Control", [initialization[0], condition[0], update[0]])
-                        return node, lines.append(update[1]), result
-
-                    else:
-                        node = None
-                        return node, lines, result
-
-                else:
-                    node = None
-                    error_expected_after(lines, initialization[1], result, "update", "';'")
-                    return node, lines, result
-
-            else:
-                node = None
-                return node, lines, result
-        
+        # Error if token is empty
         else:
-            node = None
-            error_expected_after(lines, initialization[1], result, "condition", "';'")
-            return node, lines, result
+            node = Node("LoopControl", [initialization[0], condition[0], Node("Error", [])])
+            error_expected_after(lines, condition[1], result, "update", "';'")
+            return node, lines.append(condition[1]), result
+    
+    # Error if token is empty
     else:
-        node = None
-        return node, lines, result
+        node = Node("LoopControl", [initialization[0], Node("Error", [])])
+        error_expected_after(lines, initialization[1], result, "condition", "';'")
+        return node, lines.append(initialization[1]), result
 
 def for_loop(number_line, tokens, lexemes, lines, result, Node):
     popped_for = pop_first_element(number_line, tokens, lexemes)
     
-    if tokens:
-        if tokens[0] == "LPAREN":
-            popped_lparen = pop_first_element(number_line, tokens, lexemes)
+    # Check if for is followed by left parenthesis
+    if tokens and tokens[0] == "LPAREN":
+        popped_lparen = pop_first_element(number_line, tokens, lexemes)
 
-            if tokens:
-                loop_control = for_loopcontrol(number_line, tokens, lexemes, lines, result, Node)
+        # Check if token is empty
+        if tokens:
+            loop_control = for_loopcontrol(number_line, tokens, lexemes, lines, result, Node)
 
-                if loop_control[0] != None:
-
-                    if tokens and (tokens[0] == "RPAREN"):
-                        popped_rparen = pop_first_element(number_line, tokens, lexemes)
-                        
-                        if tokens:
-                            statements = parse_statements(number_line, tokens, lexemes, lines, result, Node)
-
-                            if statements[0] != None:    
-                                node = Node("ForLoop", [loop_control[0], statements[0]])
-                                return node, lines.append(statements[1]), result
-                            
-                            else:
-                                node = None
-                                return node, lines, result
-                        else:
-                            node = None
-                            error_expected_after(lines, popped_rparen[1], result, "'{'", "keyword")
-                            return node, lines, result
-                                                            
-                    else:
-                        node = None
-                        error_expected_after(lines, loop_control[1], result, "')'", "update")
-                        return node, lines, result
-                    
+            # Check if for is followed by right parenthesis
+            if tokens and (tokens[0] == "RPAREN"):
+                popped_rparen = pop_first_element(number_line, tokens, lexemes)
+                
+                # Check if token is empty
+                if tokens:
+                    statements = parse_statements(number_line, tokens, lexemes, lines, result, Node)
+                    node = Node("ForLoop", [loop_control[0], statements[0]])
+                    return node, lines.append(statements[1]), result
+                
+                # Error if token is empty
                 else:
-                    node = None
-                    return node, lines, result
-
+                    node = Node("ForLoop", [loop_control[0], Node("Error", [])])
+                    error_expected_after(lines, popped_rparen[1], result, "'{'", "keyword")
+                    return node, lines.append(popped_rparen[1]), result
+                
+            # Error if missing right parenthesis                                    
             else:
-                node = None
-                error_expected_after(lines, popped_lparen[1], result, "initialization", "for keyword")
-                return node, lines, result
+                node = Node("ForLoop", [loop_control[0], Node("Error", [])])
+                error_expected_after(lines, loop_control[1], result, "')'", "update")
+                return node, lines.append(loop_control[1]), result
 
+        # Error if token is empty
         else:
-            node = None
-            error_expected_after(lines, popped_lparen[1], result, "'('", "for keyword")
-            return node, lines, result
-        
+            node = Node("ForLoop", [Node("Error", [])])
+            error_expected_after(lines, popped_lparen[1], result, "initialization", "for keyword")
+            return node, lines.append(popped_lparen[1]), result
+
+    # Error missing left parenthesis   
     else:
-        node = None
+        node = Node("ForLoop", [Node("Error", [])])
         error_expected_after(lines, popped_for[1], result, "'('", "for keyword")
-        return node, lines, result
+        return node, lines.append(popped_for[1]), result
 
 def if_statement(number_line, tokens, lexemes, lines, result, Node):
     if_condition = condition(number_line, tokens, lexemes, lines, result, Node)
 
-    #check if it is followed by lbrace
+    # Check if if is followed by left brace
     if tokens and tokens[0] == "LBRACE":
         statements = parse_statements(number_line, tokens, lexemes, lines, result, Node)
 
-        #if it is followed by else
+        # Check if statements is followed by else
         if tokens and lexemes[0] == "else":
             else_elseif = else_statement(number_line, tokens, lexemes, lines, result, Node)
-            #if followed by if elsw
-            node = Node("If-Else", [else_elseif[0]])
+            node = Node("If-Else", [Node("If", if_condition[0], statements[0]), else_elseif[0]])
             return node, lines.append(statements[1]), result
 
-        #if if_statement only
+        # If condition
         else:
             node = Node("If", [if_condition[0], statements[0]])
             return node, lines, result
-                    
-    #invalid if there's no declaration and lbrace
+
+    # Error missing left brace
     else:
-        node = Node("Declaration", Node() )
-        error_expected_after(lines, if_condition[1], result, "'{'", "Declaration")
-        return node, lines.append(if_condition[1]), result
+        node = Node("If", [if_condition[0], Node("Error", [])])
+        error_expected_after(lines, if_condition[1], result, "'{'", "declaration")
+        return node, lines.append(condition[1]), result
 
 # Else Statement
 def else_statement(number_line, tokens, lexemes, lines, result, Node):
@@ -789,8 +772,7 @@ ds_objects = {
 # Check declaration grammar
 def parse_declaration(number_line, tokens, lexemes, lines, result, Node):
     # Stores data type token[0] and number line[1] to popped_datatype
-    popped_declaration = pop_first_element(number_line, tokens, lexemes)
-    declaration = Node("Declaration", [Node(popped_declaration[0], [popped_declaration[2]])])
+    popped_datatype = pop_first_element(number_line, tokens, lexemes)
 
     # If data type is followed by an identifier
     if tokens and tokens[0] == "IDENTIFIER":
@@ -799,14 +781,14 @@ def parse_declaration(number_line, tokens, lexemes, lines, result, Node):
         identifier = Node("Identifier", [popped_identifier[2]])
 
         if tokens and tokens[0] == "LPAREN":
-            node, lines, result = parse_function(declaration, identifier, number_line, tokens, lexemes, lines, result, Node)
+            node, lines, result = parse_function(popped_datatype[0], identifier, number_line, tokens, lexemes, lines, result, Node)
             return node, lines, result
 
         # If identifer is followed by comma, multiple declaration
         elif tokens and tokens[0] == "COMMA":
             pop_first_element(number_line, tokens, lexemes)
             multichild_node, lines, result = parse_multidec(identifier, number_line, tokens, lexemes, lines, result, Node)
-            node = Node("Declaration", [declaration, multichild_node])
+            node = Node("Declaration", [Node(popped_datatype[0],[popped_datatype[2]]), multichild_node])
             return node, lines, result
         
         elif tokens and tokens[0] == "LBRACKET":
@@ -819,36 +801,33 @@ def parse_declaration(number_line, tokens, lexemes, lines, result, Node):
             return node, lines, result
         
         elif tokens and tokens[0] == "INSRT_OP" or tokens and tokens[0] == "PRTYEQ_OP":
-            node, lines, result = parse_dscodeop(identifier, number_line, tokens, lexemes, lines, result, Node)
+            node, lines, result = parse_dscodeop(popped_identifier, number_line, tokens, lexemes, lines, result, Node)
             return node, lines, result
         
         # If identifier is followed by a semicolon
         elif tokens and tokens[0] == "SEMICOLON":
-            node = Node("Declaration", [identifier])
+            node = Node("Declaration", [Node(popped_datatype[0],[popped_datatype[2]]), identifier])
+
             popped_semicolon = pop_first_element(number_line, tokens, lexemes)
             return node, lines.append(popped_semicolon[1]), result
         
         else:
-            if tokens:
-                node = Node("Declaration", [identifier[0], Node("Error", [])])
-                error_expected_after(lines, popped_identifier[1], result, "Assignment Operators, [, ;", "Identifier in declaration")
-                return node, lines.append(popped_identifier[1]), result
-            else:   
-                node = Node("Declaration", [identifier[0], Node("Error", [])])
-                error_expected_after(lines, popped_identifier[1], result, "Assignment Operators, [, ;", "Identifier in declaration")
-                return node, lines.append(popped_identifier[1]), result
+            node = Node("Declaration", [identifier, Node("Error", [])])
+            error_expected_after(lines, popped_identifier[1], result, "Assignment Operators, [, ;", "Identifier in declaration")
+            return node, lines.append(popped_identifier[1]), result
+            
 
     # Error if data type is not followed by an identifier
     else:
         node = Node("Declaration", [Node("Error", [])])
-        error_expected_after(lines, popped_declaration[1], result, "Identifier", "Declaration")
-        return node, lines.append(popped_declaration[1]), result
+        error_expected_after(lines, popped_datatype[1], result, "Identifier", "Declaration")
+        return node, lines.append(popped_datatype[1]), result
         
 def parse_function(datatype, identifier, number_line, tokens, lexemes, lines, result, Node):
     if tokens and tokens[0] == "LPAREN":
         popped_lparen = pop_first_element(number_line, tokens, lexemes)
         if tokens:
-            parameters, lines, result = parse_parameters(popped_lparen, number_line, tokens, lexemes, lines, result, Node)
+            parameters = parse_parameters(popped_lparen, number_line, tokens, lexemes, lines, result, Node)
 
             if tokens and tokens[0] == "SEMICOLON":
                 popped_semicolon = pop_first_element(number_line, tokens, lexemes)
@@ -861,17 +840,17 @@ def parse_function(datatype, identifier, number_line, tokens, lexemes, lines, re
             elif tokens:
                 #error in parameter, no semicollon/rbrace
                 node = Node("Parameters", [Node("Error", [])])
-                error_expected_after(lines, popped_lparen[1], result, "{ or ;", "parameters")
-                return node, lines, result
+                error_expected_after(lines, parameters[1], result, "{ or ;", "parameters")
+                return node, lines.append(parameters[1]), result
             else:
                 #error in Declaration, missing semicolon
                 node = Node("Declaration", [("Error", [])])
-                error_missing_semicolon(lines, popped_lparen[1], result, ";", "declaration")
-                return node, lines, result
+                error_missing_semicolon(lines, parameters[1], result, "declaration")
+                return node, lines.append(parameters[1]), result
         else: 
             #error in function declarators when error in parameters
             node = Node("FunctionDeclaration", [Node("Error", [])])
-            error_expected_after(lines, popped_lparen[1], result, "Parameters", "FunctionDeclaration")
+            error_expected_after(lines, popped_lparen[1], result, "Parameters", "Function Declaration")
             return node, lines.append(popped_lparen[1]), result
     
     
@@ -891,13 +870,13 @@ def parse_parameters(lparen, number_line, tokens, lexemes, lines, result, Node):
                 else:
                     break
             else:
-                node = Node("DataType", Node[("Error", [])])
+                node = Node("DataType", [Node("Error", [])])
                 error_expected_after(lines, popped_datatype[1], result, "Identifier", "DataType")
                 return node, lines.append(popped_datatype[1]), result      
         else:
             #error in data type
             pop_first_element(number_line, tokens, lexemes)
-            node = Node("DataType", Node[("Error", [])])
+            node = Node("DataType", [Node("Error", [])])
             error_expected_after(lines, lparen[1], result, "DataType", "(")
             return node, lines.append(lparen[1]), result    
 
@@ -1020,11 +999,11 @@ def parse_dscodeop(popped_identifier, number_line, tokens, lexemes, lines, resul
     nodes = []
 
     while tokens and tokens[0] == "INSRT_OP" or tokens and tokens[0] == "PRTYEQ_OP":
-        pop_first_element(number_line, tokens, lexemes)
+        popped_operator = pop_first_element(number_line, tokens, lexemes)
 
         if tokens and tokens[0] in ds_objects:
             dsobjects = pop_first_element(number_line, tokens, lexemes)
-            nodes.append(Node("Insert", [popped_identifier, dsobjects[0]]))
+            nodes.append(Node("Insert", [popped_identifier, popped_operator[2], dsobjects[2]]))
 
             if tokens:
                 if tokens and tokens[0] == "SEMICOLON":
