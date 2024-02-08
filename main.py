@@ -269,7 +269,13 @@ class GUI:
             self.syntax_errors.insert(END, f"Error in Line {item1}:\t{item2}\n")
 
         for item3 in self.parser_node:
-            self.syntax_errors.insert(END, f"{item3}")
+            string = str(item3)
+            self.syntax_errors.insert(END, f"\n{string}")
+        '''
+        nodes_list = string.split("[")
+        for i in range(len(nodes_list)):
+            tab = " " * i
+            self.syntax_errors.insert(END, f"\n{tab}{nodes_list[i]}")'''
 
         self.syntax_errors.config(state = "disabled")
 
