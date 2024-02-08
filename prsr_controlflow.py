@@ -6,14 +6,20 @@ from prsr_otherkeywords import parse_otherkeywords
 from prsr_declaration import parse_declaration
 
 def check_for_error(node, Node):
-    if node.value == "Error":
-        return True
-    else:
-        # If it's not an error or a leaf node, recursively check its children
-        for child in node.children:
-            if check_for_error(child, Node):
-                return True
+    if not node.children:  # Base case: If node has no children, return False
         return False
+    
+    for child in node.children:
+        if isinstance(child, Node):  # Check if the child is an instance of Node class
+            if not child.children:  # If the child has no children, check if it's an empty list
+                if child.value == "Error":
+                    return True
+        else:
+            if check_for_error(child, Node):  # Recursively check children's children
+                return True
+
+    return False  # If no child or their descendants are empty lists, return False
+
 
 def parse_controlflow(number_line, tokens, lexemes, lines, result, Node):
     if lexemes[0] == "break":
@@ -49,9 +55,9 @@ def parse_break(number_line, tokens, lexemes, lines, result, Node):
 
     # Check if break is followed by semicolon
     if tokens and tokens[0] == "SEMICOLON":
-            node = Node("Break", [popped_break[2]])
-            pop_first_element(number_line, tokens, lexemes)
-            return node, popped_break[1], result
+        node = Node("Break", [popped_break[2]])
+        pop_first_element(number_line, tokens, lexemes)
+        return node, popped_break[1], result
 
     # Error if missing semicolon
     else:
@@ -65,7 +71,7 @@ def parse_continue(number_line, tokens, lexemes, lines, result, Node):
 
     #Check if continue is followed by semicolon
     if tokens and tokens[0] == "SEMICOLON":
-        node = Node("Continue", [popped_continue[0]])
+        node = Node("Continue", [popped_continue[2]])
         pop_first_element(number_line, tokens, lexemes)
         return node, popped_continue[1], result
 
@@ -81,7 +87,7 @@ def parse_return(number_line, tokens, lexemes, lines, result, Node):
 
     #Check if return is followed by semicolon
     if tokens and tokens[0] == "SEMICOLON":
-        node = Node("Go-To", [popped_return[0]])
+        node = Node("Return", [popped_return[2]])
         pop_first_element(number_line, tokens, lexemes)
         return node, popped_return[1], result
 
@@ -102,7 +108,7 @@ def parse_goto(number_line, tokens, lexemes, lines, result, Node):
 
         #Check if identifier is followed by semicolon
         if tokens and tokens[0] == "SEMICOLON":
-            node = Node("Go-To", [popped_identifier[0]])
+            node = Node("Go-To", [identifier])
             pop_first_element(number_line, tokens, lexemes)
             return node, popped_identifier[1], result
 
@@ -131,7 +137,7 @@ def condition(number_line, tokens, lexemes, lines, result, Node):
             condition = parse_boolexpression(number_line, tokens, lexemes, lines, result, Node)
 
             # Check if while loop has a condition
-            if not check_for_error(condition[0], Node):
+            if check_for_error(condition[0], Node) == False:
 
                 # Check if condition is followed by a right parenthesis
                 if tokens and tokens[0] == "RPAREN":
@@ -148,11 +154,8 @@ def condition(number_line, tokens, lexemes, lines, result, Node):
             # Error if invalid condition
             else:
                 node = condition[0]
-                popped_value = pop_first_element(number_line, tokens, lexemes)
-                lines[-1] = popped_value[1]
-                result[-1] = "Expected condition after '('"
                 return node, condition[1], result
-        
+                  
         # Error if missing condition
         else:
             node = Node(popped_keyword[2].capitalize(), [Node("Error", [])])
@@ -217,7 +220,7 @@ def while_loop(number_line, tokens, lexemes, lines, result, Node):
     while_condition = condition(number_line, tokens, lexemes, lines, result, Node)
     
     # Check if while keyword is followed by a condition
-    if not check_for_error(while_condition[0], Node):
+    if not check_for_error(while_condition[0], Node) == True:
 
         if tokens and tokens[0] == "LBRACE":
             statements = parse_statements(number_line, tokens, lexemes, lines, result, Node)

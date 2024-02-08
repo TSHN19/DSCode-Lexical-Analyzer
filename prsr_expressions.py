@@ -31,17 +31,18 @@ def parse_boolexpression(number_line, tokens, lexemes, lines, result, Node):
     if node[0] == None:
         return node[0], number_line, result
 
-    lines = node[1]
+    node_line = node[1]
 
     check_node = node[0].value 
     check = check_node in boolean_operators
     
     if not check:
         # Handle the case where there is no boolean operator
-        error_expected(lines, node[1], result, "conditional expression")
-        return None, lines, result
+        node = Node("Condition", [node[0], Node("Error", [])])
+        error_expected(lines, node_line, result, "conditional expression")
+        return node, node_line, result
 
-    return node[0], lines
+    return node[0], node_line
 
 def parse_expression(number_line, tokens, lexemes, lines, result, Node):
     is_expression = False
